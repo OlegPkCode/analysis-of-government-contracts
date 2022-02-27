@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 
 KONTRAKT = '2782001254217000094'  # Номер контракта
-ORG = '812-4'  # Идентификатор организации
+ORG = '812-pni4'  # Идентификатор организации
 URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + KONTRAKT + '&#contractSubjects'
 URL_POSITIONS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + KONTRAKT + '&page=1&pageSize=200'
 # https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=2782506561118000012&#contractSubjects
@@ -47,6 +47,7 @@ for item in line:
 
         data.append({'name': name, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price, 'sum': sum})
 
+org_full_name = soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[0].text.strip()
 year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
     1].text.strip()
 razd = year_finish.find('\n')
@@ -76,7 +77,8 @@ if total == total_site:
                     i['sum'],
                     KONTRAKT,
                     ORG,
-                    year_finish
+                    year_finish,
+                    org_full_name
                 )
             )
     print('Контракт: ' + KONTRAKT + ' Позиций - ', pos)
