@@ -5,4 +5,3 @@ with open('all_data.csv','w') as f:
     for j in ls:
         s = open(j).read()
         f.write(s)
-        f.write('\n')
