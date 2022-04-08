@@ -2,13 +2,25 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import time
+import os
 
 
-def convert(x):
-    # Удаляем внутренние непереносимые пробелы и меняем запятую на точку
+def convert_namePos(x):
+    # Удаляем впередистоящие знаки, отличные от символьных и кавычки
+    while x[0].isdecimal():
+        x = x[1:]
+    x = x.replace('"', '')
+    x = x.replace("'", '')
+
+    return x.strip()
+
+
+def convert_num(x):
+    # Удаляем внутренние непереносимые пробелы и меняем запятую на точку (PNI 4)
     x = x.replace(',', '.')
     x = x.replace('\xa0', '')
     return x
+
 
 def parsing(contract, org):
     URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + contract + '&#contractSubjects'
@@ -35,16 +47,16 @@ def parsing(contract, org):
         qtyIzm = item.find('div', class_='align-items-center w-space-nowrap')
         priceInPage = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyIzm is not None) and (priceInPage is not None):
-            name = name.text.strip().replace('"', '\'')
+            name = convert_namePos(name.text.strip())
             # Преобразование столбцов количества и единиц измерений
             qtyIzm = qtyIzm.text.strip()
             razd = qtyIzm.find('\n')
-            qty = convert(qtyIzm[:razd])
+            qty = convert_num(qtyIzm[:razd])
             izm = qtyIzm[razd + 1:].strip().replace(';', '').replace('"', '')
             # Преобразование столбцов цены и суммы
-            price = convert(priceInPage[0].text.strip())
+            price = convert_num(priceInPage[0].text.strip())
             sum = priceInPage[1].text.strip()
-            sum = convert(sum[:sum.find('\n')])
+            sum = convert_num(sum[:sum.find('\n')])
 
             pos += 1
             total += float(sum)
@@ -53,7 +65,7 @@ def parsing(contract, org):
 
     # org_full_name = soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[0].text.strip()
     year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
-        1].text.strip()[-4:]
+                      1].text.strip()[-4:]
 
     line_footer = soup_pos.find('tfoot', class_='tableBlock__foot').find_all('tr', class_='tableBlock__row')
     for items in line_footer:
@@ -64,7 +76,7 @@ def parsing(contract, org):
     total = round(total, 2)
 
     if total == total_site:
-        with open(contract + '-' + str(pos) + '.csv', 'w', newline='') as file:
+        with open(contract + '--' + year_finish + '--' + str(pos) + '.csv', 'w', newline='') as file:
             writer = csv.writer(file, delimiter=';')
             for i in data:
                 writer.writerow(
@@ -91,20 +103,38 @@ def parsing(contract, org):
 
 
 # Идентификатор организации
-org = 'SPB_PNI-4'
+org = 'SPB_PNI-6'
 # Список контрактов
 list_contract = [
-    2782001254217000093,
-    2782001254217000094,
-    2782001254217000095,
-    2782001254219000002,
-    2782001254219000004,
-    2782001254219000005,
-    2782001254219000006,
-    2782001254219000007
+    2782766187417000026,
+    2782766187417000027,
+    2782766187417000029,
+    2782766187418000014,
+    2782766187418000018,
+    2782766187418000019,
+    2782766187418000020,
+    2782766187418000053,
+    2782766187418000054,
+    2782766187418000056,
+    2782766187418000057,
+    2782766187418000058,
+    2782766187419000001,
+    2782766187419000011,
+    2782766187419000012,
+    2782766187419000014,
+    2782766187419000016,
+    2782766187419000017,
+    2782766187420000112
 ]
 
 for i in list_contract:
     print(list_contract.index(i) + 1)
     parsing(str(i), org)
     time.sleep(5)
+
+ls = [i for i in os.listdir() if i.endswith('.csv')]
+ls.sort()
+with open(org + '.csv', 'w') as f:
+    for j in ls:
+        s = open(j).read()
+        f.write(s)
