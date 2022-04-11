@@ -3,59 +3,146 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
-def get_rows(name_pos, num_page):
+list_contract = []
+with open('list_contract.csv', 'r') as csvfile:
+    for i in csvfile:
+        list_contract.append(i[:-1])
+# print(list_contract)
 
-    url = '''https://zakupki.gov.ru/epz/contract/search/results.html?searchString=''' + name_pos + ''''&
-    morphology=on&
-    fz44=on&
-    contractStageList_1=on&
-    contractStageList=1&
-    selectedContractDataChanges=ANY&
-    contractCurrencyID=-1&
-    budgetLevelsIdNameHidden=%7B%7D&
-    customerPlace=5277347%2C5277342&
-    customerPlaceCodes=%2C&
-    executionDateStart=01.01.2017&
-    executionDateEnd=31.12.2021&
-    countryRegIdNameHidden=%7B%7D&
-    sortBy=UPDATE_DATE&
-    pageNumber=''' + str(num_page) + '''&
-    sortDirection=false&
-    recordsPerPage=_500&
-    showLotsInfoHidden=false'''
-    url = url.replace('\n', '')
-    url = ''.join(url.split())
 
+def convert_namePos(x):
+    # Удаляем впередистоящие знаки, отличные от символьных и кавычки
+    while x[0].isdecimal():
+        x = x[1:]
+    x = x.replace('"', '')
+    x = x.replace("'", '')
+
+    return x.strip()
+
+
+def convert_num(x):
+    # Удаляем внутренние непереносимые пробелы и меняем запятую на точку (PNI 4)
+    x = x.replace(',', '.')
+    x = x.replace('\xa0', '')
+    return x
+
+
+def get_soup(contract, num_page):
+    URL = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + contract + '&page=' + str(num_page) + '&pageSize=10'
+    # https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=2780604280221000020&page=1&pageSize=10
     HEADERS = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
     }
 
-    r = requests.get(url, headers=HEADERS)
+    r = requests.get(URL, headers=HEADERS)
     soup = BeautifulSoup(r.text, 'html.parser')
-    rows = soup.find('div', class_='search-registry-entrys-block')
-    rows = rows.find_all('div', class_='registry-entry__header-mid__number')
-
-    return rows
+    return soup
 
 
-name_pos = 'миндаль'
-num_page = 1
-list_contract = []
+def parsing(contract, find_text):
+    data = []
+    pos = 0
+    total = 0
+    total_site = 0
+    num_page = 1
 
-rows = get_rows(name_pos, num_page)
 
-while len(rows) > 0:
-    print('Total row = ', len(rows))
-    for i in rows:
-        contract_num = i.find('a').text.strip()[2:]
-        list_contract.append(contract_num)
-    num_page = num_page + 1
+    #*************************************************************************************
 
-    rows = get_rows(name_pos, num_page)
+    URL = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=2780604280221000020&page=1&pageSize=500'
+    HEADERS = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
+    }
 
+    r = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(r.text, 'html.parser')
+
+    # *************************************************************************************
+
+    # soup = get_soup(contract, num_page)
+    # row = soup.find_all('tr', class_='tableBlock__row')
+    # print(len(row))
+
+    # for item in row:
+    #     name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+        # name = convert_namePos(name.text.strip())
+        # print(name)
+    # nm = ''
+    line = soup.find_all('tr', class_='tableBlock__row')
+    for item in line:
+        name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+        # name = convert_namePos(name.text.strip())
+        print(name)
+
+
+
+
+
+    # line = soup_pos.find_all('tr', class_='tableBlock__row')
+    # for item in line:
+    #     name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+    #     qtyIzm = item.find('div', class_='align-items-center w-space-nowrap')
+    #     priceInPage = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
+    #     if (name is not None) and (qtyIzm is not None) and (priceInPage is not None):
+    #         name = convert_namePos(name.text.strip())
+    #         # Преобразование столбцов количества и единиц измерений
+    #         qtyIzm = qtyIzm.text.strip()
+    #         razd = qtyIzm.find('\n')
+    #         qty = convert_num(qtyIzm[:razd])
+    #         izm = qtyIzm[razd + 1:].strip().replace(';', '').replace('"', '')
+    #         # Преобразование столбцов цены и суммы
+    #         price = convert_num(priceInPage[0].text.strip())
+    #         sum = priceInPage[1].text.strip()
+    #         sum = convert_num(sum[:sum.find('\n')])
+    #
+    #         pos += 1
+    #         total += float(sum)
+    #
+    #         data.append({'name': name, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price, 'sum': sum})
+
+    # # org_full_name = soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[0].text.strip()
+    # year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
+    #                   1].text.strip()[-4:]
+    #
+    # line_footer = soup_pos.find('tfoot', class_='tableBlock__foot').find_all('tr', class_='tableBlock__row')
+    # for items in line_footer:
+    #     total_site = items.find('td', class_='tableBlock__col tableBlock__col_right cost').text.strip()
+    #
+    # total_site = ''.join(total_site.split())
+    # total_site = float(total_site.replace(',', '.'))
+    # total = round(total, 2)
+    #
+    # if total == total_site:
+    #     with open(contract + '--' + year_finish + '--' + str(pos) + '.csv', 'w', newline='') as file:
+    #         writer = csv.writer(file, delimiter=';')
+    #         for i in data:
+    #             writer.writerow(
+    #                 (
+    #                     i['name'],
+    #                     i['qty'],
+    #                     i['izm'],
+    #                     i['price'],
+    #                     i['sum'],
+    #                     contract,
+    #                     year_finish,
+    #                     org
+    #                     # org_full_name
+    #                 )
+    #             )
+    #     print('Контракт: ' + contract + ' Позиций - ', pos)
+    #     print('Сумма импортированных позиций - ', total)
+    #     print('Сумма позиций на сайте - ', total_site, end="\n" * 2)
+    # else:
+    #     print('!!!!! СУММА ИМПОРТИРОВАННЫХ ПОЗИЦИЙ РАСХОДИТСЯ С ОБЩЕЙ СУММОЙ КОНТРАКТОВ НА САЙТЕ!!!!!')
+    #     print('Позиций - ', pos)
+    #     print('Сумма импортированных позиций - ', total)
+    #     print('Сумма позиций на сайте - ', total_site)
+
+
+find_text = 'астила'
+for i in list_contract:
+    print(f'{list_contract.index(i) + 1:03}', i)
+    parsing(i, find_text)
     time.sleep(5)
-
-with open('list_contract.csv', 'w', newline='') as file:
-    writer = csv.writer(file, delimiter='\n')
-    writer.writerow(list_contract)
