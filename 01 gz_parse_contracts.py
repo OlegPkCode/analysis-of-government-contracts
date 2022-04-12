@@ -6,23 +6,26 @@ import os
 
 
 def convert_namePos(x):
-    # Удаляем впередистоящие знаки, отличные от символьных и кавычки
+    # Удаляем впередистоящие знаки, отличные от символьных и кавычки и лишние пробелы в начале и в конце
+    x = x.strip()
     while x[0].isdecimal():
         x = x[1:]
     x = x.replace('"', '')
     x = x.replace("'", '')
+    # Удаляем дублирующие пробелы и переносы строки
+    x = ' '.join(x.split())
 
     return x.strip()
 
 
 def convert_num(x):
-    # Удаляем внутренние непереносимые пробелы и меняем запятую на точку (PNI 4)
-    x = x.replace(',', '.')
+    # Удаляем внутренние непереносимые пробелы
+    # x = x.replace(',', '.')
     x = x.replace('\xa0', '')
     return x
 
 
-def parsing(contract, org):
+def parsing(contract):
     URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + contract + '&#contractSubjects'
     URL_POSITIONS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + contract + '&page=1&pageSize=200'
     HEADERS = {
@@ -32,6 +35,7 @@ def parsing(contract, org):
 
     r_head = requests.get(URL_HEADER, headers=HEADERS)
     soup_head = BeautifulSoup(r_head.text, 'html.parser')
+    time.sleep(5)
     r_pos = requests.get(URL_POSITIONS, headers=HEADERS)
     soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
 
@@ -47,7 +51,8 @@ def parsing(contract, org):
         qtyIzm = item.find('div', class_='align-items-center w-space-nowrap')
         priceInPage = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyIzm is not None) and (priceInPage is not None):
-            name = convert_namePos(name.text.strip())
+            name = convert_namePos(name.text)
+            name_dop = convert_namePos(item.find_all('td', class_='tableBlock__col')[2].text)
             # Преобразование столбцов количества и единиц измерений
             qtyIzm = qtyIzm.text.strip()
             razd = qtyIzm.find('\n')
@@ -59,9 +64,9 @@ def parsing(contract, org):
             sum = convert_num(sum[:sum.find('\n')])
 
             pos += 1
-            total += float(sum)
+            total += float(sum.replace(',', '.'))
 
-            data.append({'name': name, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price, 'sum': sum})
+            data.append({'name': name, 'name_dop': name_dop, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price, 'sum': sum})
 
     # org_full_name = soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[0].text.strip()
     year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
@@ -82,6 +87,7 @@ def parsing(contract, org):
                 writer.writerow(
                     (
                         i['name'],
+                        i['name_dop'],
                         i['qty'],
                         i['izm'],
                         i['price'],
@@ -106,12 +112,30 @@ def parsing(contract, org):
 org = 'SPB_PNI-6'
 # Список контрактов
 list_contract = [
-    2780604280221000020
+    2782766187417000026,
+    2782766187417000027,
+    2782766187417000029,
+    2782766187418000014,
+    2782766187418000018,
+    2782766187418000019,
+    2782766187418000020,
+    2782766187418000053,
+    2782766187418000054,
+    2782766187418000056,
+    2782766187418000057,
+    2782766187418000058,
+    2782766187419000001,
+    2782766187419000011,
+    2782766187419000012,
+    2782766187419000014,
+    2782766187419000016,
+    2782766187419000017,
+    2782766187420000112
 ]
 
 for i in list_contract:
     print(list_contract.index(i) + 1)
-    parsing(str(i), org)
+    parsing(str(i))
     time.sleep(5)
 
 ls = [i for i in os.listdir() if i.endswith('.csv')]

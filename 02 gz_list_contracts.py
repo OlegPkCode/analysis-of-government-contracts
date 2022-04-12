@@ -16,7 +16,7 @@ def get_rows(name_pos, num_page):
     customerPlace=5277347%2C5277342&
     customerPlaceCodes=%2C&
     executionDateStart=01.01.2017&
-    executionDateEnd=31.12.2021&
+    executionDateEnd=31.12.2017&
     countryRegIdNameHidden=%7B%7D&
     sortBy=UPDATE_DATE&
     pageNumber=''' + str(num_page) + '''&
@@ -39,7 +39,7 @@ def get_rows(name_pos, num_page):
     return rows
 
 
-name_pos = 'миндаль'
+name_pos = 'яйц'
 num_page = 1
 list_contract = []
 
