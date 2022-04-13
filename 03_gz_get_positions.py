@@ -18,8 +18,8 @@ def convert_namePos(x):
 
 
 def convert_num(x):
-    # Удаляем внутренние непереносимые пробелы и меняем запятую на точку (PNI 4)
-    x = x.replace(',', '.')
+    # Удаляем внутренние непереносимые пробелы
+    # x = x.replace(',', '.')
     x = x.replace('\xa0', '')
     return x
 
@@ -93,7 +93,7 @@ with open('list_contract.csv', 'r') as csvfile:
     for i in csvfile:
         list_contract.append(i[:-1])
 
-find_text = 'яйц'
+find_text = 'творог'
 for i in list_contract:
     print(f'{list_contract.index(i) + 1:04} из {len(list_contract)}', i)
     parsing(i, find_text)
