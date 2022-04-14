@@ -2,13 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import time
+import os.path
 
 
 def convert_namePos(x):
     # Удаляем впередистоящие знаки, отличные от символьных и кавычки и лишние пробелы в начале и в конце
     x = x.strip()
-    while x[0].isdecimal():
-        x = x[1:]
+
+    if len(x) > 0:
+        while x[0].isdecimal():
+            x = x[1:]
     x = x.replace('"', '')
     x = x.replace("'", '')
     # Удаляем дублирующие пробелы и переносы строки
@@ -62,11 +65,14 @@ def parsing(contract, find_text):
                 sum = priceInPage[1].text.strip()
                 sum = convert_num(sum[:sum.find('\n')])
 
-                data.append({'name': name, 'name_dop': name_dop, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price,
-                             'sum': sum})
+                data.append(
+                    {'name': name, 'name_dop': name_dop, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price,
+                     'sum': sum})
 
     if len(data) > 0:
-        org_full_name = soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[0].text.strip()
+        org_full_name = \
+            soup_head.find('div', class_='sectionMainInfo__body').find_all('span', class_='cardMainInfo__content')[
+                0].text.strip()
         year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
                           1].text.strip()[-4:]
 
@@ -83,9 +89,20 @@ def parsing(contract, find_text):
                         i['sum'],
                         contract,
                         year_finish,
-                        convert_namePos(org_full_name)
+                        convert_namePos(org_full_name),
+                        find_text
                     )
                 )
+
+
+def get_contract_positions():
+    list_contract_positions = []
+    with open('list_pos.csv', 'r') as csvfile:
+        for i in csvfile:
+            x = i.split(';')[6]
+            list_contract_positions.append(x)
+
+    return list_contract_positions
 
 
 list_contract = []
@@ -93,8 +110,16 @@ with open('list_contract.csv', 'r') as csvfile:
     for i in csvfile:
         list_contract.append(i[:-1])
 
-find_text = 'творог'
+if os.path.exists('list_pos.csv'):
+    list_contract_positions = get_contract_positions()
+    for i in list_contract_positions:
+        if i in list_contract:
+            list_contract.remove(i)
+
 for i in list_contract:
-    print(f'{list_contract.index(i) + 1:04} из {len(list_contract)}', i)
-    parsing(i, find_text)
-    time.sleep(3)
+    if list_contract.index(i) == 0:
+        find_text = i
+    else:
+        print(f'{list_contract.index(i) :04} из {len(list_contract) - 1}', i)
+        parsing(i, find_text)
+        time.sleep(3)

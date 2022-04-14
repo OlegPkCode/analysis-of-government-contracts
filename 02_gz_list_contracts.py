@@ -3,11 +3,17 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
+name_pos = 'треск'
+num_place = 1
+
 def get_rows(name_pos, num_page):
 
-#    customerPlace=5277347%2C5277342&
-#    customerPlace=5277347 - Питер
-#    customerPlace=5277342 - Ленобласть
+    if num_place == 1:  # г. Санкт-Петербург
+        customerPlace = '5277347'
+    elif num_place == 2:  # Ленинградская область
+        customerPlace = '5277342'
+    else:  # г. Санкт-Петербург и Ленинградская область
+        customerPlace = '5277347%2C5277342'
 
     url = '''https://zakupki.gov.ru/epz/contract/search/results.html?searchString=''' + name_pos + ''''&
     morphology=on&
@@ -17,7 +23,7 @@ def get_rows(name_pos, num_page):
     selectedContractDataChanges=ANY&
     contractCurrencyID=-1&
     budgetLevelsIdNameHidden=%7B%7D&    
-    customerPlace=5277342&
+    customerPlace=''' + customerPlace + '''&
     customerPlaceCodes=%2C&
     executionDateStart=01.01.2017&
     executionDateEnd=31.12.2021&
@@ -43,7 +49,6 @@ def get_rows(name_pos, num_page):
     return rows
 
 
-name_pos = 'творог'
 num_page = 1
 list_contract = []
 
@@ -51,6 +56,8 @@ rows = get_rows(name_pos, num_page)
 
 while len(rows) > 0:
     print('Total row = ', len(rows))
+    if num_page == 1:
+        list_contract.append(name_pos)
     for i in rows:
         contract_num = i.find('a').text.strip()[2:]
         list_contract.append(contract_num)
