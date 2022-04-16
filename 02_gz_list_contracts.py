@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
-name_pos = 'треск'
+name_pos = 'яйц'
 num_place = 1
 
-def get_rows(name_pos, num_page):
 
+def get_rows(name_pos, num_page):
     if num_place == 1:  # г. Санкт-Петербург
         customerPlace = '5277347'
     elif num_place == 2:  # Ленинградская область
@@ -56,11 +56,9 @@ rows = get_rows(name_pos, num_page)
 
 while len(rows) > 0:
     print('Total row = ', len(rows))
-    if num_page == 1:
-        list_contract.append(name_pos)
     for i in rows:
         contract_num = i.find('a').text.strip()[2:]
-        list_contract.append(contract_num)
+        list_contract.append(contract_num + ';' + name_pos)
     num_page = num_page + 1
 
     rows = get_rows(name_pos, num_page)

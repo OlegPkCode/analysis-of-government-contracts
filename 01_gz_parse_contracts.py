@@ -6,12 +6,21 @@ import os
 
 
 def convert_namePos(x):
-    # Удаляем впередистоящие знаки, отличные от символьных и кавычки и лишние пробелы в начале и в конце
+
+    # Удаляем впередистоящие знаки отличные от символьных,  кавычки , лишние пробелы в начале и в конце, знаки ";"
+    # Удаляем непереносимые пробелы
+
     x = x.strip()
-    while x[0].isdecimal():
-        x = x[1:]
+
+    if len(x) > 0:
+        while x[0].isdecimal():
+            x = x[1:]
+
     x = x.replace('"', '')
     x = x.replace("'", '')
+    x = x.replace(";", '')
+    x = x.replace('\xa0', '')
+
     # Удаляем дублирующие пробелы и переносы строки
     x = ' '.join(x.split())
 
@@ -57,7 +66,7 @@ def parsing(contract):
             qtyIzm = qtyIzm.text.strip()
             razd = qtyIzm.find('\n')
             qty = convert_num(qtyIzm[:razd])
-            izm = qtyIzm[razd + 1:].strip().replace(';', '').replace('"', '')
+            izm = convert_namePos(qtyIzm[razd + 1:])
             # Преобразование столбцов цены и суммы
             price = convert_num(priceInPage[0].text.strip())
             sum = priceInPage[1].text.strip()

@@ -6,14 +6,21 @@ import os.path
 
 
 def convert_namePos(x):
-    # Удаляем впередистоящие знаки, отличные от символьных и кавычки и лишние пробелы в начале и в конце
+
+    # Удаляем впередистоящие знаки отличные от символьных,  кавычки , лишние пробелы в начале и в конце, знаки ";"
+    # Удаляем непереносимые пробелы
+
     x = x.strip()
 
     if len(x) > 0:
         while x[0].isdecimal():
             x = x[1:]
+
     x = x.replace('"', '')
     x = x.replace("'", '')
+    x = x.replace(";", '')
+    x = x.replace('\xa0', '')
+
     # Удаляем дублирующие пробелы и переносы строки
     x = ' '.join(x.split())
 
@@ -28,10 +35,8 @@ def convert_num(x):
 
 
 def parsing(contract, find_text):
-    URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + str(
-        contract) + '&#contractSubjects'
-    URL_POSITIONS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + str(
-        contract) + '&page=1&pageSize=200'
+    URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + contract + '&#contractSubjects'
+    URL_POSITIONS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + contract + '&page=1&pageSize=200'
     HEADERS = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
@@ -59,7 +64,7 @@ def parsing(contract, find_text):
                 qtyIzm = qtyIzm.text.strip()
                 razd = qtyIzm.find('\n')
                 qty = convert_num(qtyIzm[:razd])
-                izm = qtyIzm[razd + 1:].strip().replace(';', '').replace('"', '')
+                izm = convert_namePos(qtyIzm[razd + 1:])
                 # Преобразование столбцов цены и суммы
                 price = convert_num(priceInPage[0].text.strip())
                 sum = priceInPage[1].text.strip()
@@ -99,8 +104,9 @@ def get_contract_positions():
     list_contract_positions = []
     with open('list_pos.csv', 'r') as csvfile:
         for i in csvfile:
-            x = i.split(';')[6]
-            list_contract_positions.append(x)
+            value1 = i.split(';')[6]
+            value2 = i.split(';')[9][:-1]
+            list_contract_positions.append(value1 + ';' + value2)
 
     return list_contract_positions
 
@@ -117,9 +123,7 @@ if os.path.exists('list_pos.csv'):
             list_contract.remove(i)
 
 for i in list_contract:
-    if list_contract.index(i) == 0:
-        find_text = i
-    else:
-        print(f'{list_contract.index(i) :04} из {len(list_contract) - 1}', i)
-        parsing(i, find_text)
-        time.sleep(3)
+    print(f'{list_contract.index(i) + 1 :04} из {len(list_contract)}', i)
+    str = i.split(';')
+    parsing(str[0], str[1])
+    time.sleep(3)
