@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 import csv
 import time
 
-name_pos = 'горошек'
+name_pos = 'абрикос'
 num_place = 1
+file_output = './data/list_contract.csv'
 
 
 def get_rows(name_pos, num_page):
@@ -63,8 +64,8 @@ while len(rows) > 0:
 
     rows = get_rows(name_pos, num_page)
 
-    time.sleep(5)
+    time.sleep(3)
 
-with open('list_contract.csv', 'w', newline='') as file:
+with open(file_output, 'w', newline='') as file:
     writer = csv.writer(file, delimiter='\n')
     writer.writerow(list_contract)
