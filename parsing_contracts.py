@@ -5,56 +5,10 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import csv
+from lib_parse import *
 
-file_input = './data/contracts.csv'
-file_output = './data/contract_items.csv'
-
-
-def convert_str(x):
-    # Удаляем впередистоящие знаки отличные от символьных, дублирующие пробелы, кавычки и знаки ';'
-    x = x.strip()
-
-    if len(x) > 0:
-        while x[0].isdecimal():
-            x = x[1:]
-
-    x = ' '.join(x.split())
-    x = x.replace('";', '')
-
-    # x = x.replace('"', '')
-    # x = x.replace("'", '')
-    # x = x.replace(";", '')
-    # Удаляем непереносимые пробелы
-    # x = x.replace('\xa0', '')
-
-    return x
-
-
-# def convert_namePos(x):
-#     # Удаляем впередистоящие знаки отличные от символьных,  кавычки , лишние пробелы в начале и в конце, знаки ";"
-#     # Удаляем непереносимые пробелы
-#
-#     x = x.strip()
-#
-#     if len(x) > 0:
-#         while x[0].isdecimal():
-#             x = x[1:]
-#
-#     x = x.replace('"', '')
-#     x = x.replace("'", '')
-#     x = x.replace(";", '')
-#     x = x.replace('\xa0', '')
-#
-#     # Удаляем дублирующие пробелы и переносы строки
-#     x = ' '.join(x.split())
-#
-#     return x.strip()
-
-
-def convert_num(x):
-    # Удаляем все пробелы из числа
-    # x = x.replace('\xa0', '')
-    return ''.join(x.split())
+file_input = data_path + 'contracts.csv'
+file_output = data_path + 'contract_items.csv'
 
 
 def parsing_contract(contract, customer):
@@ -89,9 +43,9 @@ def parsing_contract(contract, customer):
             name_dop = convert_str(item.find_all('td', class_='tableBlock__col')[2].text)
             # Преобразование столбцов количества и единиц измерений
             qtyUnit = qtyUnit.text.strip()
-            separator = qtyUnit.find('\n')
-            qty = convert_num(qtyUnit[:separator])
-            unit = convert_str(qtyUnit[separator + 1:])
+            qty, unit = qtyUnit.split('\n')
+            qty = convert_num(qty)
+            unit = convert_str(unit)
             # Преобразование столбцов цены и суммы
             price = convert_num(priceAndSum[0].text.strip())
             sum = priceAndSum[1].text.strip()
@@ -142,11 +96,15 @@ def parsing_contract(contract, customer):
 
 if __name__ == "__main__":
 
-    # Открываем файл file_input, проходим его построчно и по каждому контракту запускаем импорт позиций контракта
-    # и записываем результат в файл file_output
+    # Открываем файл file_input, считываем контракты в список
+    list_contract = []
     with open(file_input, 'r') as file:
         for i in file:
-            contract, year, customer = i.split(';')
-            print(contract, year)
-            parsing_contract(contract, customer[:-1])
-            time.sleep(3)
+            list_contract.append(i[:-1])
+
+    # Парсим контракты из списка
+    for item in list_contract:
+        contract, year, customer = item.split(';')
+        print(contract, year)
+        parsing_contract(contract, customer)
+        time.sleep(3)

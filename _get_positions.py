@@ -3,7 +3,10 @@ from bs4 import BeautifulSoup
 import csv
 import time
 import os.path
-import a01_gz_parse_contracts as lib
+from lib_parse import *
+
+file_input = data_path + 'list_contracts.csv'
+file_output = data_path + 'list_pos.csv'
 
 
 def parsing_step3(contract, find_text):
@@ -28,19 +31,19 @@ def parsing_step3(contract, find_text):
         qtyIzm = item.find('div', class_='align-items-center w-space-nowrap')
         priceInPage = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyIzm is not None) and (priceInPage is not None):
-            name = lib.convert_namePos(name.text)
-            name_dop = lib.convert_namePos(item.find_all('td', class_='tableBlock__col')[2].text)
+            name = convert_str(name.text)
+            name_dop = convert_str(item.find_all('td', class_='tableBlock__col')[2].text)
 
             if (find_text.lower() in name.lower()) or (find_text.lower() in name_dop.lower()):
                 # Преобразование столбцов количества и единиц измерений
                 qtyIzm = qtyIzm.text.strip()
                 razd = qtyIzm.find('\n')
-                qty = lib.convert_num(qtyIzm[:razd])
-                izm = lib.convert_namePos(qtyIzm[razd + 1:])
+                qty = convert_num(qtyIzm[:razd])
+                izm = convert_str(qtyIzm[razd + 1:])
                 # Преобразование столбцов цены и суммы
-                price = lib.convert_num(priceInPage[0].text.strip())
+                price = convert_num(priceInPage[0].text.strip())
                 sum = priceInPage[1].text.strip()
-                sum = lib.convert_num(sum[:sum.find('\n')])
+                sum = convert_num(sum[:sum.find('\n')])
 
                 data.append(
                     {'name': name, 'name_dop': name_dop, 'qtyIzm': qtyIzm, 'qty': qty, 'izm': izm, 'price': price,
@@ -53,7 +56,7 @@ def parsing_step3(contract, find_text):
         year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
                           1].text.strip()[-4:]
 
-        with open('list_pos.csv', 'a', newline='') as file:
+        with open(data_path + 'list_pos.csv', 'a', newline='') as file:
             writer = csv.writer(file, delimiter=';')
             for i in data:
                 writer.writerow(
@@ -66,7 +69,7 @@ def parsing_step3(contract, find_text):
                         i['sum'],
                         contract,
                         year_finish,
-                        lib.convert_namePos(org_full_name),
+                        convert_str(org_full_name),
                         find_text
                     )
                 )
@@ -74,7 +77,7 @@ def parsing_step3(contract, find_text):
 
 def get_contract_positions():
     list_contract_positions = []
-    with open('list_pos.csv', 'r') as csvfile:
+    with open(data_path + 'list_pos.csv', 'r') as csvfile:
         for i in csvfile:
             value1 = i.split(';')[6]
             value2 = i.split(';')[9][:-1]
@@ -83,19 +86,23 @@ def get_contract_positions():
     return list_contract_positions
 
 
-list_contract = []
-with open('list_contract.csv', 'r') as csvfile:
-    for i in csvfile:
-        list_contract.append(i[:-1])
+if __name__ == "__main__":
 
-if os.path.exists('list_pos.csv'):
-    list_contract_positions = get_contract_positions()
-    for i in list_contract_positions:
-        if i in list_contract:
-            list_contract.remove(i)
+    # Считываем контракты в список
+    list_contract = []
+    with open(file_input, 'r') as csvfile:
+        for i in csvfile:
+            list_contract.append(i[:-1])
 
-for i in list_contract:
-    print(f'{list_contract.index(i) + 1 :04} из {len(list_contract)}', i)
-    str = i.split(';')
-    parsing_step3(str[0], str[1])
-    time.sleep(3)
+    # if os.path.exists(file_output):
+    #     list_contract_positions = get_contract_positions()
+    #     print(list_contract_positions)
+    #     for i in list_contract_positions:
+    #         if i in list_contract:
+    #             list_contract.remove(i)
+
+    for i in list_contract:
+        print(f'{list_contract.index(i) + 1 :04} из {len(list_contract)}', i)
+        contract, year, position = i.split(';')
+        parsing_step3(contract, position)
+        time.sleep(3)
