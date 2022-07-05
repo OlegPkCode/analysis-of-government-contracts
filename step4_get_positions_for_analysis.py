@@ -38,13 +38,6 @@ def get_list_products_and_contracts():
         con = sq.connect(file_db)
         cur = con.cursor()
 
-        # ################################################################################################################
-
-        # cur.execute("DELETE FROM positions")
-        # con.commit()
-
-        # ################################################################################################################
-
         # Выбираем позиции, которые нужно спарсить
         for row in cur.execute("SELECT * FROM products_in_contracts"):
             positions_need.add(row)
@@ -62,24 +55,11 @@ def get_list_products_in_contract(contract):
     positions = []
     with sq.connect(file_db) as con:
         cur = con.cursor()
-        sql = f"SELECT product FROM products_in_contracts WHERE contract = '{contract}'"
+        sql = f"SELECT find_text FROM products_in_contracts WHERE contract = '{contract}'"
         for item in cur.execute(sql).fetchall():
             positions.append(item[0])
 
     return positions
-
-
-# def if_exist_str(str1, str2, ls):
-#     '''Возвращает позицию списка, которая содержится в первой или во второй строке'''
-#     res = ''
-#     for item in ls:
-#         if item in str2:
-#             res = item
-#         if item in str1:
-#             res = item
-#             break
-#
-#     return res.strip()
 
 
 def parse_positions(contract, year, positions, customer):
@@ -133,7 +113,7 @@ def parse_positions(contract, year, positions, customer):
         con = sq.connect(file_db)
         cur = con.cursor()
         cur.executemany(
-            "INSERT INTO positions (name, name_dop, qty, unit, price, total, contract, year, customer, product) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO positions (name, name_dop, qty, unit, price, total, contract, year, customer, find_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             data)
         con.commit()
 
@@ -165,7 +145,6 @@ if __name__ == "__main__":
         # Сортируем по наименованию продукта
         list_parsing.sort(key=lambda i: i[2])
         contract, year, position, customer = list_parsing[0]
-        # contract, year, position, customer = '2781702775719000005;2020;абрикос;ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ ДОШКОЛЬНОЕ ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ ДЕТСКИЙ САД № 57 КОМБИНИРОВАННОГО ВИДА КОЛПИНСКОГО РАЙОНА САНКТ-ПЕТЕРБУРГА'.split(';')
         print('2. Берем в работу: ', contract, year, position, customer)
         write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + position + ' / ' + customer)
         # Берем список всех остальных продуктов, которые могут быть в данном контракте
