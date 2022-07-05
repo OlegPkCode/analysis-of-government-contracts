@@ -16,7 +16,6 @@ set_contract_year_product_customer = set()
 with open(file_input, 'r') as file:
     count = 1
     for row in file:
-        # print('Строка', count)
         count += 1
         contract, year, product, customer = row[:-1].split(';')
         set_product.add(product)
