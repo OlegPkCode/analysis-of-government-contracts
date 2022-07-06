@@ -38,11 +38,17 @@ def parsing_contract(contract, customer):
         if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
             name = convert_str(name.text)
             name_dop = convert_str(item.find_all('td', class_='tableBlock__col')[2].text)
+
             # Преобразование столбцов количества и единиц измерений
             qtyUnit = qtyUnit.text.strip()
-            qty, unit = qtyUnit.split('\n')
-            qty = convert_num(qty)
-            unit = convert_str(unit)
+            try:
+                qty, unit = qtyUnit.split('\n')
+                qty = convert_num(qty)
+                unit = convert_str(unit)
+            except:
+                qty = 0
+                unit = convert_str(qtyUnit)
+
             # Преобразование столбцов цены и суммы
             price = convert_num(priceAndSum[0].text.strip())
             sum = priceAndSum[1].text.strip()

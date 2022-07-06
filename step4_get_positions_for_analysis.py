@@ -88,9 +88,14 @@ def parse_positions(contract, year, positions, customer):
                 if (product.lower() in name.lower()) or (product.lower() in name_dop.lower()):
                     # Преобразование столбцов количества и единиц измерений
                     qtyUnit = qtyUnit.text.strip()
-                    qty, unit = qtyUnit.split('\n')
-                    qty = convert_num(qty)
-                    unit = convert_str(unit)
+                    try:
+                        qty, unit = qtyUnit.split('\n')
+                        qty = convert_num(qty)
+                        unit = convert_str(unit)
+                    except:
+                        qty = 0
+                        unit = convert_str(qtyUnit)
+
                     # Преобразование столбцов цены и суммы
                     price = convert_num(priceAndSum[0].text.strip())
                     sum = priceAndSum[1].text.strip()
@@ -104,8 +109,8 @@ def parse_positions(contract, year, positions, customer):
             if input_pos == data_pos[9]:
                 find_pos = True
         if find_pos == False:
-            print('!!! Не данных по продукту ' + input_pos + ' в контракте ' + contract)
-            write_log('!!! Не данных по продукту ' + input_pos + ' в контракте ' + contract)
+            print('!!! Нет данных по продукту: <' + input_pos + ';' + contract + '>')
+            write_log('!!! Нет данных по продукту: <' + input_pos + ';' + contract + '>')
 
     con = None
 
@@ -129,8 +134,7 @@ def write_log(message):
     '''Записываем данные <message> в лог-файл'''
 
     with open(file_output, 'a') as file:
-        file.write('\n')
-        file.write(message)
+        file.write(message + '\n')
 
 
 if __name__ == "__main__":
