@@ -39,7 +39,7 @@ def get_list_products_and_contracts():
         cur = con.cursor()
 
         # Выбираем позиции, которые нужно спарсить
-        for row in cur.execute("SELECT * FROM products_in_contracts WHERE in_work = 1"):
+        for row in cur.execute("SELECT contract, year, find_text, customer FROM products_in_contracts WHERE in_work = 1"):
             positions_need.add(row)
 
         # Выбираем позиции, которые уже спарсены и возвращаем разницу
@@ -109,8 +109,8 @@ def parse_positions(contract, year, positions, customer):
             if input_pos == data_pos[9]:
                 find_pos = True
         if find_pos == False:
-            print('!!! Нет данных по продукту: <' + input_pos + ';' + contract + '>')
-            write_log('!!! Нет данных по продукту: <' + input_pos + ';' + contract + '>')
+            print('!!! Нет данных по продукту в контракте: <' + input_pos + ';' + contract + '>')
+            write_log('!!! Нет данных по продукту в контракте: <' + input_pos + ';' + contract + '>')
 
     con = None
 
@@ -137,6 +137,24 @@ def write_log(message):
         file.write(message + '\n')
 
 
+def set_contract_not_in_work(contract):
+
+    con = None
+
+    try:
+        con = sq.connect(file_db)
+        cur = con.cursor()
+        cur.execute(f"UPDATE products_in_contracts SET in_work = 0 WHERE contract = '{contract}'")
+        con.commit()
+
+    except sq.DatabaseError as err:
+        if con: con.rollback()
+        print("Error: ", err)
+
+    finally:
+        if con: con.close()
+
+
 if __name__ == "__main__":
     great_table_positions()
 
@@ -156,8 +174,19 @@ if __name__ == "__main__":
         print('3. У данного контракта берем в работу позиции: ', positions)
         write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
         # Парсим заданную строку
+        sum_items_list_parsing = len(list_parsing)
         parse_positions(contract, year, positions, customer)
-        time.sleep(3)
         list_parsing = list(get_list_products_and_contracts())
+        new_sum_items_list_parsing = len(list_parsing)
+        # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
+        if sum_items_list_parsing == new_sum_items_list_parsing:
+            print('!!! Контракт не обработан: <' + contract + '>')
+            write_log('!!! Контракт не обработан: <' + contract + '>')
+            set_contract_not_in_work(contract)
+            list_parsing = list(get_list_products_and_contracts())
         print('\n1. Всего позиций для парсинга:', len(list_parsing))
         write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+        time.sleep(3)
+
+
+
