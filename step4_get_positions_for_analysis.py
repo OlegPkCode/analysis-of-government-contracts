@@ -142,8 +142,8 @@ if __name__ == "__main__":
 
     # Получаем список продуктов и привязанных к ним контрактов, которые нужно спарсить
     list_parsing = list(get_list_products_and_contracts())
-    print('1. Всего позиций для парсинга:', len(list_parsing))
-    write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+    print('\n1. Всего позиций для парсинга:', len(list_parsing))
+    write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
 
     while len(list_parsing) > 0:
         # Сортируем по наименованию продукта
@@ -159,5 +159,5 @@ if __name__ == "__main__":
         parse_positions(contract, year, positions, customer)
         time.sleep(3)
         list_parsing = list(get_list_products_and_contracts())
-        print('1. Всего позиций для парсинга:', len(list_parsing))
-        write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+        print('\n1. Всего позиций для парсинга:', len(list_parsing))
+        write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
