@@ -2,3 +2,4 @@
 test/*
 data/*
 *.sqlite3
+*.log

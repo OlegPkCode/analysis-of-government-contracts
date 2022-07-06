@@ -39,7 +39,7 @@ def get_list_products_and_contracts():
         cur = con.cursor()
 
         # Выбираем позиции, которые нужно спарсить
-        for row in cur.execute("SELECT * FROM products_in_contracts"):
+        for row in cur.execute("SELECT * FROM products_in_contracts WHERE in_work = 1"):
             positions_need.add(row)
 
         # Выбираем позиции, которые уже спарсены и возвращаем разницу
@@ -55,7 +55,7 @@ def get_list_products_in_contract(contract):
     positions = []
     with sq.connect(file_db) as con:
         cur = con.cursor()
-        sql = f"SELECT find_text FROM products_in_contracts WHERE contract = '{contract}'"
+        sql = f"SELECT find_text FROM products_in_contracts WHERE contract = '{contract}' AND in_work = 1"
         for item in cur.execute(sql).fetchall():
             positions.append(item[0])
 

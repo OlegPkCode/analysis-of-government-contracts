@@ -38,7 +38,7 @@ if answer == 'Yes':
     data = []
     for row in set_contract_year_product_customer:
         contract, year, product, customer = row.split(';')
-        data.append((contract, year, product, customer))
+        data.append((contract, year, product, customer, 1))
 
     with sq.connect(file_db) as con:
         cur = con.cursor()
@@ -52,11 +52,12 @@ if answer == 'Yes':
                 contract TEXT,
                 year INTEGER,
                 find_text TEXT,
-                customer TEXT
+                customer TEXT,
+                in_work INTEGER
             )
         ''')
 
         # Заполняем таблицу из списка кортежей
         cur.executemany(
-            'INSERT INTO products_in_contracts (contract, year, find_text, customer) VALUES (?, ?, ?, ?)',
+            'INSERT INTO products_in_contracts (contract, year, find_text, customer, in_work) VALUES (?, ?, ?, ?, ?)',
             data)
