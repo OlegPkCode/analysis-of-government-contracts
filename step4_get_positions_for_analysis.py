@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import sqlite3 as sq
+import datetime
 from lib_parse import *
 
 file_output = 'step4_log.csv'
@@ -39,7 +40,8 @@ def get_list_products_and_contracts():
         cur = con.cursor()
 
         # Выбираем позиции, которые нужно спарсить
-        for row in cur.execute("SELECT contract, year, find_text, customer FROM products_in_contracts WHERE in_work = 1"):
+        for row in cur.execute(
+                "SELECT contract, year, find_text, customer FROM products_in_contracts WHERE in_work = 1"):
             positions_need.add(row)
 
         # Выбираем позиции, которые уже спарсены и возвращаем разницу
@@ -132,13 +134,13 @@ def parse_positions(contract, year, positions, customer):
 def write_log(message):
     '''Записываем данные <message> в лог-файл'''
 
-    print(message)
+    print((lambda x: '\n' if x[0] == '1' else '')(message) + message)
     with open(file_output, 'a') as file:
-        file.write(message + '\n')
+        datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
+        file.write((lambda x: '\n' if x[0] == '1' else '')(message) + str(datetime_now) + ' / ' + message + '\n')
 
 
 def set_contract_not_in_work(contract):
-
     con = None
 
     try:
@@ -160,7 +162,7 @@ if __name__ == "__main__":
 
     # Получаем список продуктов и привязанных к ним контрактов, которые нужно спарсить
     list_parsing = list(get_list_products_and_contracts())
-    write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+    write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
 
     while len(list_parsing) > 0:
         # Сортируем по наименованию продукта
@@ -180,8 +182,5 @@ if __name__ == "__main__":
             write_log('!!! Контракт не обработан: <' + contract + '>')
             set_contract_not_in_work(contract)
             list_parsing = list(get_list_products_and_contracts())
-        write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
-        time.sleep(3)
-
-
-
+        write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+        time.sleep(7)
