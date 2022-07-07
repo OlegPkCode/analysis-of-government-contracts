@@ -109,7 +109,6 @@ def parse_positions(contract, year, positions, customer):
             if input_pos == data_pos[9]:
                 find_pos = True
         if find_pos == False:
-            print('!!! Нет данных по продукту в контракте: <' + input_pos + ';' + contract + '>')
             write_log('!!! Нет данных по продукту в контракте: <' + input_pos + ';' + contract + '>')
 
     con = None
@@ -133,6 +132,7 @@ def parse_positions(contract, year, positions, customer):
 def write_log(message):
     '''Записываем данные <message> в лог-файл'''
 
+    print(message)
     with open(file_output, 'a') as file:
         file.write(message + '\n')
 
@@ -160,18 +160,15 @@ if __name__ == "__main__":
 
     # Получаем список продуктов и привязанных к ним контрактов, которые нужно спарсить
     list_parsing = list(get_list_products_and_contracts())
-    print('\n1. Всего позиций для парсинга:', len(list_parsing))
     write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
 
     while len(list_parsing) > 0:
         # Сортируем по наименованию продукта
         list_parsing.sort(key=lambda i: i[2])
         contract, year, position, customer = list_parsing[0]
-        print('2. Берем в работу: ', contract, year, position, customer)
         write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + position + ' / ' + customer)
         # Берем список всех остальных продуктов, которые могут быть в данном контракте
         positions = get_list_products_in_contract(contract)
-        print('3. У данного контракта берем в работу позиции: ', positions)
         write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
         # Парсим заданную строку
         sum_items_list_parsing = len(list_parsing)
@@ -180,11 +177,9 @@ if __name__ == "__main__":
         new_sum_items_list_parsing = len(list_parsing)
         # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
         if sum_items_list_parsing == new_sum_items_list_parsing:
-            print('!!! Контракт не обработан: <' + contract + '>')
             write_log('!!! Контракт не обработан: <' + contract + '>')
             set_contract_not_in_work(contract)
             list_parsing = list(get_list_products_and_contracts())
-        print('\n1. Всего позиций для парсинга:', len(list_parsing))
         write_log('\n1. Всего позиций для парсинга: ' + str(len(list_parsing)))
         time.sleep(3)
 
