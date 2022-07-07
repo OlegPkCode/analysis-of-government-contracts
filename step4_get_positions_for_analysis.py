@@ -134,9 +134,9 @@ def parse_positions(contract, year, positions, customer):
 def write_log(message):
     '''Записываем данные <message> в лог-файл'''
 
-    print((lambda x: '\n' if x[0] == '1' else '')(message) + message)
+    datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
+    print((lambda x: '\n' if x[0] == '1' else '')(message) + str(datetime_now) + ' / ' + message)
     with open(file_output, 'a') as file:
-        datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
         file.write((lambda x: '\n' if x[0] == '1' else '')(message) + str(datetime_now) + ' / ' + message + '\n')
 
 
