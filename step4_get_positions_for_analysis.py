@@ -135,9 +135,10 @@ def write_log(message):
     '''Записываем данные <message> в лог-файл'''
 
     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
-    print((lambda x: '\n' if x[0] == '1' else '')(message) + str(datetime_now) + ' / ' + message)
+    message_prefix = (lambda x: '\n' if x[0] == '1' else '')(message)
+    print(message_prefix + str(datetime_now) + ' / ' + message)
     with open(file_output, 'a') as file:
-        file.write((lambda x: '\n' if x[0] == '1' else '')(message) + str(datetime_now) + ' / ' + message + '\n')
+        file.write(message_prefix + str(datetime_now) + ' / ' + message + '\n')
 
 
 def set_contract_not_in_work(contract):
