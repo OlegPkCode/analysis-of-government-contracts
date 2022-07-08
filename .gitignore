@@ -1,5 +1,6 @@
-.idea/*
-test/*
+venv
 data/*
+__pycache__
+.idea/*
 *.sqlite3
-*.log
+*.csv

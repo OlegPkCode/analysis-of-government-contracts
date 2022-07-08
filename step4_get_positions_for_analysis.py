@@ -5,8 +5,7 @@ import sqlite3 as sq
 import datetime
 from lib_parse import *
 
-file_output = 'step4_log.csv'
-
+file_output = datetime.datetime.now().strftime("%Y-%m-%d_log.csv")
 
 def great_table_positions():
     ''' Создаем таблицу positions, если ее нет в БД'''
