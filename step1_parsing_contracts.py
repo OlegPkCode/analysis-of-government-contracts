@@ -19,7 +19,7 @@ def parsing_contract(contract, customer):
     # Считываем заголовок контракта и позиции в контракте
     r_head = requests.get(URL_HEADER, headers=HEADERS)
     soup_head = BeautifulSoup(r_head.text, 'html.parser')
-    time.sleep(3)
+    time.sleep(7)
     r_pos = requests.get(URL_ITEMS, headers=HEADERS)
     soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
 
@@ -89,7 +89,7 @@ def parsing_contract(contract, customer):
                 )
         print('Контракт: ' + contract + ' Позиций - ', pos)
         print('Сумма импортированных позиций - ', total)
-        print('Сумма позиций по данным с сайт - ', total_in_site, end="\n" * 2)
+        print('Сумма позиций по данным с сайта - ', total_in_site, end="\n" * 2)
     else:
         print('!!!!! СУММА ИМПОРТИРОВАННЫХ ПОЗИЦИЙ РАСХОДИТСЯ С ОБЩЕЙ СУММОЙ КОНТРАКТОВ НА САЙТЕ!!!!!')
         print('Позиций - ', pos)
@@ -110,4 +110,4 @@ if __name__ == "__main__":
         contract, year, customer = item.split(';')
         print(contract, year)
         parsing_contract(contract, customer)
-        time.sleep(3)
+        time.sleep(7)

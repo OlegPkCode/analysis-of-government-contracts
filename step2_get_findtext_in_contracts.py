@@ -97,7 +97,7 @@ if __name__ == "__main__":
                 print('Total row =', sum_row)
                 num_page = num_page + 1
                 rows = get_rows(product, num_page)
-                time.sleep(3)
+                time.sleep(7)
 
             # Записываем результат в файл
             file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + start_date + '_to_' + end_date + '_rows_' + str(

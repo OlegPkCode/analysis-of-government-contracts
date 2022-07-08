@@ -1,9 +1,20 @@
+import os
 from lib_parse import *
 import sqlite3 as sq
 
-'''Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_input'''
+'''Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv'''
 
-file_input = data_path + 'all.csv'
+file_output = data_path + 'all.csv'
+
+with open(file_output,'w') as f:
+    for adress, dirs, files in os.walk(data_path):
+        for file in files:
+            full_path = os.path.join(adress, file)
+            if full_path[-4:] == '.csv':
+                f.write(open(full_path).read())
+
+
+'''Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output'''
 
 # Открываем файл и для начала выводим справочную информацию по нему
 
@@ -13,7 +24,7 @@ set_contract_year = set()
 set_contract_year_customer = set()
 set_contract_year_product_customer = set()
 
-with open(file_input, 'r') as file:
+with open(file_output, 'r') as file:
     count = 1
     for row in file:
         count += 1
