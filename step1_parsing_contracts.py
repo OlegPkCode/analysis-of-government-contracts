@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import csv
-from lib_parse import *
+from lib_gz import *
 
 file_input = data_path + 'contracts.csv'
 file_output = data_path + 'contract_items.csv'

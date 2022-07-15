@@ -1,5 +1,5 @@
 import os
-from lib_parse import *
+from lib_gz import *
 import sqlite3 as sq
 
 '''Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv'''

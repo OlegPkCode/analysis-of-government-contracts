@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import time
 import sqlite3 as sq
 import datetime
-from lib_parse import *
+from lib_gz import *
 
 file_output = datetime.datetime.now().strftime("%Y-%m-%d_log.csv")
 
@@ -35,7 +35,6 @@ def get_list_products_and_contracts():
     positions_have = set()
 
     with sq.connect(file_db) as con:
-        con = sq.connect(file_db)
         cur = con.cursor()
 
         # Выбираем позиции, которые нужно спарсить

@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import time
-from lib_parse import *
+from lib_gz import *
 
 start_date = '01.01.2017'
 end_date = '31.12.2021'
