@@ -1,8 +1,15 @@
+'''
+Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
+
+Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output
+
+'''
+
 import os
 from lib_gz import *
 import sqlite3 as sq
 
-'''Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv'''
+# Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
 
 file_output = data_path + 'all.csv'
 
@@ -14,10 +21,9 @@ with open(file_output,'w') as f:
                 f.write(open(full_path).read())
 
 
-'''Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output'''
+# Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output
 
 # Открываем файл и для начала выводим справочную информацию по нему
-
 set_product = set()
 set_contract = set()
 set_contract_year = set()

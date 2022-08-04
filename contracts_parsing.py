@@ -1,3 +1,10 @@
+'''
+Парсит данные с сайта по контрактам, записанным в файле file_input
+Формат файла file_input:
+Номер контракта;Год;Заказчик
+Результат записывается в файл file_output
+'''
+
 import requests
 from bs4 import BeautifulSoup
 import time

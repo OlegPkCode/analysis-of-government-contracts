@@ -10,7 +10,7 @@ file_db = 'gz.sqlite3'
 def convert_str(x):
     x = x.strip()
     if len(x) > 0:
-        while x[0].isdecimal():
+        while not x[0].x.isalpha():
             x = x[1:]
 
     x = ' '.join(x.split())
