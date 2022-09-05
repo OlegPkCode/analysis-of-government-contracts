@@ -9,10 +9,6 @@ file_db = 'gz.sqlite3'
 # Удаляем впередистоящие знаки отличные от символьных, дублирующие пробелы, кавычки и знаки ';'
 def convert_str(x):
     x = x.strip()
-    if len(x) > 0:
-        while not x[0].x.isalpha():
-            x = x[1:]
-
     x = ' '.join(x.split())
     x = x.replace('"', '')
     x = x.replace("'", '')
