@@ -39,3 +39,22 @@ Python, SQLite, Docker
 >python3 get_positions_for_analysis.py   
   
 >python3 make_dataset.py
+
+### Запуск проекта в Docker
+
+Создать в папке проекта папку `data`
+
+Клонировать репозиторий
+```
+git clone git@github.com:prol-it/analysis-of-government-contracts.git
+```
+
+Собрать образ из Dockerfile
+```
+docker build --tag gz .
+```
+
+Запустить контейнер
+```
+docker run -it --rm -v $(pwd)/data:/app/data gz /bin/bash
+```
