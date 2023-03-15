@@ -26,7 +26,7 @@ def parsing_contract(contract, customer):
     # Считываем заголовок контракта и позиции в контракте
     r_head = requests.get(URL_HEADER, headers=HEADERS)
     soup_head = BeautifulSoup(r_head.text, 'html.parser')
-    time.sleep(7)
+    time.sleep(5)
     r_pos = requests.get(URL_ITEMS, headers=HEADERS)
     soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
 
@@ -72,6 +72,9 @@ def parsing_contract(contract, customer):
     year_finish = soup_head.find('div', class_='date mt-auto').find_all('div', class_='cardMainInfo__section')[
                       1].text.strip()[-4:]
 
+    # Полное наименование заказчика
+    customer_full_name = soup_head.find('span', class_='cardMainInfo__content').text.strip()
+
     # Берем общую сумму позиций данного контакта на сайте
     total_in_site = convert_num(soup_pos.find('td', class_='tableBlock__col tableBlock__col_right cost').text.strip())
     total_in_site = float(convert_num_dot(total_in_site))
@@ -91,6 +94,7 @@ def parsing_contract(contract, customer):
                         i['sum'],
                         contract,
                         year_finish,
+                        convert_str(customer_full_name),
                         customer
                     )
                 )
@@ -117,4 +121,4 @@ if __name__ == "__main__":
         contract, year, customer = item.split(';')
         print(contract, year)
         parsing_contract(contract, customer)
-        time.sleep(7)
+        time.sleep(5)
