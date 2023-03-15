@@ -1,7 +1,7 @@
 '''
 Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
 
-Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output
+Заполняет этими данными таблицу products_in_contracts в БД gz.sqlite3 (file_db)
 
 '''
 
