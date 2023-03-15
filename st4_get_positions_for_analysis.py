@@ -161,11 +161,13 @@ if __name__ == "__main__":
 
     # Получаем список продуктов и привязанных к ним контрактов, которые нужно спарсить
     list_parsing = list(get_list_products_and_contracts())
+    # Сортируем по контрактам
+    list_parsing.sort(key=lambda x: x[0])
     write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
 
     while len(list_parsing) > 0:
         # Сортируем по наименованию продукта
-        list_parsing.sort(key=lambda i: i[2])
+        # list_parsing.sort(key=lambda i: i[2])
         contract, year, position, customer = list_parsing[0]
         write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + position + ' / ' + customer)
         # Берем список всех остальных продуктов, которые могут быть в данном контракте
@@ -175,11 +177,16 @@ if __name__ == "__main__":
         sum_items_list_parsing = len(list_parsing)
         parse_positions(contract, year, positions, customer)
         list_parsing = list(get_list_products_and_contracts())
+        # Сортируем по контрактам
+        list_parsing.sort(key=lambda x: x[0])
         new_sum_items_list_parsing = len(list_parsing)
         # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
         if sum_items_list_parsing == new_sum_items_list_parsing:
             write_log('!!! Контракт не обработан: <' + contract + '>')
             set_contract_not_in_work(contract)
             list_parsing = list(get_list_products_and_contracts())
+            # Сортируем по контрактам
+            list_parsing.sort(key=lambda x: x[0])
+
         write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
-        time.sleep(7)
+        time.sleep(5)
