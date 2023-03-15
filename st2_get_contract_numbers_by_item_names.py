@@ -15,7 +15,7 @@ import time
 from lib_gz import *
 
 start_date = '01.01.2017'
-end_date = '31.12.2021'
+end_date = '31.12.2022'
 file_input = data_path + 'products.csv'
 
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
                 print('Total row =', sum_row)
                 num_page = num_page + 1
                 rows = get_rows(product, num_page)
-                time.sleep(7)
+                time.sleep(5)
 
             # Записываем результат в файл
             file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + start_date + '_to_' + end_date + '_rows_' + str(
