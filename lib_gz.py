@@ -13,7 +13,8 @@ def convert_str(x):
     x = x.replace('"', '')
     x = x.replace("'", '')
     x = x.replace(';', '')
-    while not x[0].isalpha():
+
+    while len(x) > 0 and not x[0].isalpha():
         x = x[1:]
 
     return x
