@@ -7,6 +7,7 @@ from lib_gz import *
 
 file_output = datetime.datetime.now().strftime("%Y-%m-%d_log.csv")
 
+
 def great_table_positions():
     ''' Создаем таблицу positions, если ее нет в БД'''
 

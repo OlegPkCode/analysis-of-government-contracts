@@ -13,13 +13,12 @@ import sqlite3 as sq
 
 file_output = data_path + 'all.csv'
 
-with open(file_output,'w') as f:
+with open(file_output, 'w') as f:
     for adress, dirs, files in os.walk(data_path):
         for file in files:
             full_path = os.path.join(adress, file)
             if full_path[-4:] == '.csv':
                 f.write(open(full_path).read())
-
 
 # Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output
 
