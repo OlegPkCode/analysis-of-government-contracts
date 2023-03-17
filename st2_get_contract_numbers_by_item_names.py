@@ -12,10 +12,10 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import time
-from lib_gz import *
+from lib_gz import data_path, convert_str
 
 start_date = '01.01.2017'
-end_date = '31.12.2022'
+end_date = '31.12.2021'
 file_input = data_path + 'products.csv'
 
 
@@ -66,11 +66,9 @@ if __name__ == "__main__":
             list_products.append(i[:-1])
 
     # Парсим контракты, содержащие данные продукты
-    for item_list_products in list_products:
+    for find_text in list_products:
 
-        products = item_list_products.split(';')
-        product_name = products.pop(0)
-
+        products = find_text.split(',')
         for product in products:
 
             num_page = 1
@@ -93,14 +91,14 @@ if __name__ == "__main__":
                     contract_customer = convert_str(item.find('div', class_='registry-entry__body-href').text.strip())
 
                     # Если данный контракт содержит электронную версию, и контракта нет в списке, то сохраняем его
-                    if contract_list_products != None:
+                    if contract_list_products is not None:
                         contract_exist = 0
                         for i in list_contracts:
                             if contract_num in i:
                                 contract_exist = 1
                         if contract_exist == 0:
                             list_contracts.append(
-                                contract_num + ';' + contract_year_complite + ';' + product_name + ';' + contract_customer)
+                                contract_num + ';' + contract_year_complite + ';' + find_text + ';' + contract_customer)
                             sum_row += 1
 
                 # Листаем страницы
