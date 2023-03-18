@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import csv
-from lib_gz import *
+from lib_gz import data_path, convert_str, convert_num, convert_num_dot
 
 file_input = data_path + 'contracts.csv'
 file_output = data_path + 'contract_items.csv'

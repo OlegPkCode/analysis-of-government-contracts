@@ -6,7 +6,7 @@
 '''
 
 import os
-from lib_gz import *
+from lib_gz import data_path, file_db
 import sqlite3 as sq
 
 # Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
