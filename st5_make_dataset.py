@@ -1,7 +1,7 @@
 '''Выгружает спарсенные данные из таблицы positions в csv файл дальнейшей очистки и анализа'''
 
 import sqlite3 as sq
-from lib_gz import *
+from lib_gz import file_db, data_path
 import csv
 
 file_output = data_path + 'dataset_positions.csv'

@@ -15,7 +15,7 @@ import time
 from lib_gz import data_path, convert_str
 
 start_date = '01.01.2017'
-end_date = '31.12.2021'
+end_date = '31.12.2022'
 file_input = data_path + 'products.csv'
 
 

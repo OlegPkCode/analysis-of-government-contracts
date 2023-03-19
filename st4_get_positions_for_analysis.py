@@ -39,13 +39,14 @@ def get_list_products_and_contracts():
         cur = con.cursor()
 
         # Выбираем позиции, которые нужно спарсить
-        for row in cur.execute("SELECT contract, year, find_text, customer FROM products_in_contracts WHERE in_work = 1"):
-        # for row in cur.execute("SELECT contract, year, customer FROM products_in_contracts WHERE in_work = 1"):
+        for row in cur.execute(
+                "SELECT contract, year, find_text, customer FROM products_in_contracts WHERE in_work = 1"):
+            # for row in cur.execute("SELECT contract, year, customer FROM products_in_contracts WHERE in_work = 1"):
             positions_need.add(row)
 
         # Выбираем позиции, которые уже спарсены и возвращаем разницу
         for row in cur.execute("SELECT contract, year, find_text, customer FROM positions"):
-        # for row in cur.execute("SELECT contract, year, customer FROM positions"):
+            # for row in cur.execute("SELECT contract, year, customer FROM positions"):
             positions_have.add(row)
 
     return positions_need - positions_have
@@ -172,23 +173,32 @@ if __name__ == "__main__":
     write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
 
     while len(list_parsing) > 0:
-        # Сортируем по наименованию продукта (2), по контрактам (0)
-        list_parsing.sort(key=lambda x: x[0])
-        contract, year, find_text, customer = list_parsing[0]
-        write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + find_text + ' / ' + customer)
-        # Берем список всех остальных продуктов, которые могут быть в данном контракте
-        positions = get_list_products_in_contract(contract)
-        write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
-        # Парсим заданную строку
-        sum_items_list_parsing = len(list_parsing)
-        parse_positions(contract, year, positions, customer, find_text)
-        list_parsing = list(get_list_products_and_contracts())
-        new_sum_items_list_parsing = len(list_parsing)
-        # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
-        if sum_items_list_parsing == new_sum_items_list_parsing:
-            write_log('!!! Контракт не обработан: <' + contract + '>')
-            set_contract_not_in_work(contract)
-            list_parsing = list(get_list_products_and_contracts())
 
-        write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
-        time.sleep(5)
+        try:
+            # Сортируем по наименованию продукта (2), по контрактам (0)
+            list_parsing.sort(key=lambda x: x[0])
+            contract, year, find_text, customer = list_parsing[0]
+            write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + find_text + ' / ' + customer)
+            # Берем список всех остальных продуктов, которые могут быть в данном контракте
+            positions = get_list_products_in_contract(contract)
+            write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
+            # Парсим заданную строку
+            sum_items_list_parsing = len(list_parsing)
+            parse_positions(contract, year, positions, customer, find_text)
+            list_parsing = list(get_list_products_and_contracts())
+            new_sum_items_list_parsing = len(list_parsing)
+            # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
+            if sum_items_list_parsing == new_sum_items_list_parsing:
+                write_log('!!! Контракт не обработан: <' + contract + '>')
+                set_contract_not_in_work(contract)
+                list_parsing = list(get_list_products_and_contracts())
+
+            write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
+            time.sleep(5)
+
+        except ConnectionError:
+            # если возник разрыв соединения
+            print(f'!!! Разрыв соединения, контракт: {contract}')
+            write_log('!!! Разрыв соединения: <' + contract + '>')
+            time.sleep(60)
+            # requests.exceptions.ConnectionError
