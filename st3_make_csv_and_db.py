@@ -16,6 +16,8 @@ file_output = data_path + 'all.csv'
 with open(file_output, 'w') as f:
     for adress, dirs, files in os.walk(data_path):
         for file in files:
+            if file == 'products.csv':
+                continue
             full_path = os.path.join(adress, file)
             if full_path[-4:] == '.csv':
                 f.write(open(full_path).read())
