@@ -42,6 +42,7 @@ with open(file_output, 'r') as file:
         set_contract_year_customer.add(contract + ';' + year + ';' + customer)
         set_contract_year_product_customer.add(contract + ';' + year + ';' + product + ';' + customer)
 
+os.remove(file_output)
 print('Количество продуктов:', len(set_product))
 print('Количество контрактов:', len(set_contract))
 print('Контракт/год:', len(set_contract_year))
