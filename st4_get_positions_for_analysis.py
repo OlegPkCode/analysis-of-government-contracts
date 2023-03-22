@@ -60,18 +60,18 @@ def get_list_products_in_contract(contract):
     with sq.connect(file_db) as con:
         cur = con.cursor()
         sql = f"SELECT find_text FROM products_in_contracts WHERE contract = '{contract}' AND in_work = 1"
-        # for item in cur.execute(sql).fetchall():
-        #     positions.append(item[0])
-        for item_rec in cur.execute(sql).fetchall():
-            for item in item_rec:
-                a = item.strip().split(',')
-                for i in a:
-                    positions.append(i)
+        for item in cur.execute(sql).fetchall():
+            positions.append(item[0])
+        # for item_rec in cur.execute(sql).fetchall():
+        #     for item in item_rec:
+        #         a = item.strip().split(',')
+        #         for i in a:
+        #             positions.append(i)
 
     return positions
 
 
-def parse_positions(contract, year, positions, customer, find_text):
+def parse_positions(contract, year, customer):
     URL_ITEMS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + \
                 contract + '&page=1&pageSize=200'
     HEADERS = {
@@ -80,12 +80,27 @@ def parse_positions(contract, year, positions, customer, find_text):
     }
 
     # Считываем позиции в контракте
+    write_log('80')
     r_pos = requests.get(URL_ITEMS, headers=HEADERS)
     soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
     position_list = soup_pos.find_all('tr', class_='tableBlock__row')
     data = []
 
-    for product in positions:
+    write_log('81')
+    # Берем список всех остальных продуктов, которые могут быть в данном контракте
+    find_text = get_list_products_in_contract(contract)
+    for item_find_text in find_text:
+        # positions = item_find_text.strip(',')
+        # for position in positions:
+        #     print(position)
+
+
+    # print(find_text)
+    # write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
+
+
+        # for product in positions:
+        print(item_find_text)
 
         # Заполняем список data позициями контракта
         for item in position_list:
@@ -99,7 +114,16 @@ def parse_positions(contract, year, positions, customer, find_text):
                 name = convert_str(name.text)
                 name_dop = convert_str(item.find_all(
                     'td', class_='tableBlock__col')[2].text)
-                if (product.lower() in name.lower()) or (product.lower() in name_dop.lower()):
+
+
+                parse = False
+                for product in item_find_text.split(','):
+                    if (product.lower() in name.lower()) or (product.lower() in name_dop.lower()):
+                        parse = True
+
+
+
+                if parse:
                     # Преобразование столбцов количества и единиц измерений
                     qtyUnit = qtyUnit.text.strip()
                     try:
@@ -119,7 +143,7 @@ def parse_positions(contract, year, positions, customer, find_text):
 
                     # data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, product))
                     if sum != '' and float(convert_num_dot(sum)) >= 10000:
-                        data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, find_text))
+                        data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, item_find_text))
 
     # for input_pos in positions:
     #     find_pos = False
@@ -190,18 +214,13 @@ if __name__ == "__main__":
     while len(list_parsing) > 0:
 
         try:
-            # Сортируем по наименованию продукта (2), по контрактам (0)
-            list_parsing.sort(key=lambda x: x[0])
+            # Сортируем по наименованию продукта (2), и по контрактам (0)
+            list_parsing.sort(key=lambda x: (x[2], x[0]))
             contract, year, find_text, customer = list_parsing[0]
-            write_log('2. Берем в работу: ' + contract + ' / ' +
-                      str(year) + ' / ' + find_text + ' / ' + customer)
-            # Берем список всех остальных продуктов, которые могут быть в данном контракте
-            positions = get_list_products_in_contract(contract)
-            write_log(
-                '3. У данного контракта берем в работу позиции: ' + str(positions))
+            write_log('2. Берем в работу: ' + contract + ' / ' + str(year) + ' / ' + find_text + ' / ' + customer)
             # Парсим заданную строку
             sum_items_list_parsing = len(list_parsing)
-            parse_positions(contract, year, positions, customer, find_text)
+            parse_positions(contract, year, customer)
             list_parsing = list(get_list_products_and_contracts())
             new_sum_items_list_parsing = len(list_parsing)
             # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
@@ -210,8 +229,7 @@ if __name__ == "__main__":
                 set_contract_not_in_work(contract)
                 list_parsing = list(get_list_products_and_contracts())
 
-            write_log('1. Всего позиций для парсинга: ' +
-                      str(len(list_parsing)))
+            write_log('1. Всего позиций для парсинга: ' + str(len(list_parsing)))
             time.sleep(5)
 
         except ConnectionResetError as cn:
