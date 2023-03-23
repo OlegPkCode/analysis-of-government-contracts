@@ -6,6 +6,11 @@
 Например:
 яйц;яйц;яйца;яйцо
 Результат записывается в файлы file_output_название_обработанной_позиции
+
+Если test_difference истина, то
+Выгружает продукты, указанные в file_input и заполняет таблицу products_in_contracts
+РАЗНИЦЕЙ в этих продуктах. Т.е результирующая таблица содержит не содержит общих контрактов,
+которые есть в списке file_input
 '''
 
 import requests
@@ -14,11 +19,12 @@ import csv
 import os
 import time
 import sqlite3 as sq
-from lib_gz import data_path, convert_str, file_db
+from lib_gz import data_path, convert_str, file_db, convert_num
 
 start_date = '01.01.2017'
 end_date = '31.12.2022'
 file_input = data_path + 'products.csv'
+test_difference = 0
 
 
 def get_rows(name_pos, num_page):
@@ -52,9 +58,16 @@ def get_rows(name_pos, num_page):
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
     }
 
-    r = requests.get(url, headers=HEADERS)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    rows = soup.find_all('div', class_='row no-gutters registry-entry__form mr-0')
+    while True:
+        try:
+            r = requests.get(url, headers=HEADERS)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            rows = soup.find_all('div', class_='row no-gutters registry-entry__form mr-0')
+            break
+        except Exception as exp:
+            # если возникла какая-либо ошибка
+            print('Ошибка соединения. Пауза 1 мин.')
+            time.sleep(60)
 
     return rows
 
@@ -91,6 +104,8 @@ if __name__ == "__main__":
                     contract_list_products = item.find('span', class_='pl-0 col').find('a')
                     # Заказчик
                     contract_customer = convert_str(item.find('div', class_='registry-entry__body-href').text.strip())
+                    # Берем общую сумму позиций данного контакта на сайте
+                    total_in_site = convert_num(item.find('div', class_='price-block__value').text.strip())
 
                     # Если данный контракт содержит электронную версию, и контракта нет в списке, то сохраняем его
                     if contract_list_products is not None:
@@ -100,7 +115,7 @@ if __name__ == "__main__":
                                 contract_exist = 1
                         if contract_exist == 0:
                             list_contracts.append(
-                                contract_num + ';' + contract_year_complite + ';' + find_text + ';' + contract_customer)
+                                contract_num + ';' + contract_year_complite + ';' + total_in_site + ';' + find_text + ';' + contract_customer)
                             sum_row += 1
 
                 # Листаем страницы
@@ -124,6 +139,10 @@ if __name__ == "__main__":
     # Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
     file_output = data_path + 'all.csv'
 
+    set_union = set()
+    # set_union_file = set()
+    set_intersection = set()
+
     with open(file_output, 'w') as f:
         for adress, dirs, files in os.walk(data_path):
             for file in files:
@@ -133,39 +152,53 @@ if __name__ == "__main__":
                 if full_path[-4:] == '.csv':
                     f.write(open(full_path).read())
 
+                    if test_difference:
+                        a = open(full_path).read()
+                        set_file = set(a.split('\n'))
+                        set_file.discard('')
+                        set_union = set_union | set_file
+                        if len(set_intersection) == 0:
+                            set_intersection = set_file
+                        else:
+                            set_intersection = set_intersection & set_file
+
+    set_diff = set_union - set_intersection
+
     # Заполняет данными таблицу products_in_contracts в БД gz.sqlite3 (file_db) из исходного файла file_output
 
     # Открываем файл и для начала выводим справочную информацию по нему
-    set_product = set()
+    # set_product = set()
     set_contract = set()
-    set_contract_year = set()
-    set_contract_year_customer = set()
+    # set_contract_year = set()
+    # set_contract_year_customer = set()
     set_contract_year_product_customer = set()
 
     with open(file_output, 'r') as file:
         count = 1
         for row in file:
-            count += 1
-            contract, year, product, customer = row[:-1].split(';')
-            set_product.add(product)
+            contract, year, sum, product, customer = row[:-1].split(';')
+            # set_product.add(product)
             set_contract.add(contract)
-            set_contract_year.add(contract + ';' + year)
-            set_contract_year_customer.add(contract + ';' + year + ';' + customer)
-            set_contract_year_product_customer.add(contract + ';' + year + ';' + product + ';' + customer)
+            count += 1
+            # set_contract_year.add(contract + ';' + year)
+            # set_contract_year_customer.add(contract + ';' + year + ';' + customer)
+            set_contract_year_product_customer.add(contract + ';' + year + ';' + sum + ';' + product + ';' + customer)
 
     os.remove(file_output)
-    print('Количество продуктов:', len(set_product))
+    # print('Количество продуктов:', len(set_product))
     print('Количество контрактов:', len(set_contract))
-    print('Контракт/год:', len(set_contract_year))
-    print('Контракт/год/заказчик:', len(set_contract_year_customer))
-    print('Контракт/год/продукт/заказчик:', len(set_contract_year_product_customer))
-
+    # print('Контракт/год:', len(set_contract_year))
+    # print('Контракт/год/заказчик:', len(set_contract_year_customer))
+    # print('Контракт/год/продукт/заказчик:', len(set_contract_year_product_customer))
 
     # Заполняем список кортежей данными из множества
     data = []
+    if test_difference:
+        set_contract_year_product_customer = set_diff
+
     for row in set_contract_year_product_customer:
-        contract, year, product, customer = row.split(';')
-        data.append((contract, year, product, customer, 1))
+        contract, year, sum, product, customer = row.split(';')
+        data.append((contract, year, sum, product, customer, 1))
 
     with sq.connect(file_db) as con:
         cur = con.cursor()
@@ -178,6 +211,7 @@ if __name__ == "__main__":
             CREATE TABLE products_in_contracts (
                 contract TEXT,
                 year INTEGER,
+                sum INTEGER,
                 find_text TEXT,
                 customer TEXT,
                 in_work INTEGER
@@ -186,5 +220,5 @@ if __name__ == "__main__":
 
         # Заполняем таблицу из списка кортежей
         cur.executemany(
-            'INSERT INTO products_in_contracts (contract, year, find_text, customer, in_work) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO products_in_contracts (contract, year, sum, find_text, customer, in_work) VALUES (?, ?, ?, ?, ?, ?)',
             data)
