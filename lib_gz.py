@@ -1,4 +1,5 @@
 import os
+import re
 
 import pandas as pd
 
@@ -20,9 +21,10 @@ def convert_str(x):
     return x
 
 
-# Удаляем все пробелы из числа
+# Удаляем из все символы, кроме чисел, точки и запятой
 def convert_num(x):
-    return ''.join(x.split())
+    x = re.sub(r"[^\d.,]", "", x)
+    return x
 
 
 # Переворачиваем запятую на точку в числе
