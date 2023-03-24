@@ -111,12 +111,12 @@ def parse_positions(contract, year, customer):
             # Считываем позиции в контракте
             r_pos = requests.get(URL_ITEMS, headers=HEADERS, timeout=15)
             soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
-            position_list = soup_pos.find_all('tr', class_='tableBlock__row')
+            position_list = soup_pos.find('tbody', class_='tableBlock__body').find_all('tr', class_='tableBlock__row')
             time.sleep(5)
             break
         except Exception as exp:
             # если возникла какая-либо ошибка
-            write_log('', contract, f"Error 3: {exp}")
+            write_log('', contract, f"Error: {exp}")
             time.sleep(60)
 
     # Берем список всех остальных продуктов, которые могут быть в данном контракте
@@ -125,16 +125,13 @@ def parse_positions(contract, year, customer):
     total_sum_contract = get_sum_contract(contract)
     sum_contract = 0
     flag_sum_contract = True  # Проверить на разницу суммы контракта и сумммы позиций контракта
-    flag_contract_err = False
+    flag_contract_err = False  # Признак ошибки при обработке накладной
 
     # Заполняем список data позициями контракта
     for item in position_list:
-        name = item.find(
-            'div', class_='padBtm5 inline js-expand-all-list--not-count')
-        qtyUnit = item.find(
-            'div', class_='align-items-center w-space-nowrap')
-        priceAndSum = item.find_all(
-            'td', class_='tableBlock__col tableBlock__col_right')
+        name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+        qtyUnit = item.find('div', class_='align-items-center')
+        priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
             name = convert_str(name.text)
             name_dop = convert_str(item.find_all(
@@ -175,19 +172,16 @@ def parse_positions(contract, year, customer):
     if flag_sum_contract:
         if total_sum_contract != round(sum_contract, 2):
             write_log('', contract,
-                      f'Не сходится сумма контракта с суммой позиций по контракту!!! Сумма контракта: {total_sum_contract}, сумма позиций: {round(sum_contract, 2)}')
+                      f'Не сходится сумма контракта с суммой позиций!!! {total_sum_contract} / {round(sum_contract, 2)}')
 
     if len(data) == 0:
         flag_contract_err = True
 
         # Заполняем список data позициями контракта
         for item in position_list:
-            name = item.find(
-                'div', class_='padBtm5 inline js-expand-all-list--not-count')
-            qtyUnit = item.find(
-                'div', class_='align-items-center w-space-nowrap')
-            priceAndSum = item.find_all(
-                'td', class_='tableBlock__col tableBlock__col_right')
+            name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+            qtyUnit = item.find('div', class_='align-items-center')
+            priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
             if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
                 name = convert_str(name.text)
                 name_dop = convert_str(item.find_all(
@@ -198,7 +192,14 @@ def parse_positions(contract, year, customer):
                 sum = priceAndSum[1].text.strip()
                 sum = convert_num(sum[:sum.find('\n')])
 
-                if True:
+                parse = False
+                for item_find_text in find_text:
+                    for product in item_find_text.split(','):
+                        if (product.lower() in name.lower()) or (product.lower() in name_dop.lower()):
+                            parse = True
+                            add_product = item_find_text
+
+                if parse:
                     # Преобразование столбцов количества и единиц измерений
                     qtyUnit = qtyUnit.text.strip()
                     try:
@@ -211,7 +212,7 @@ def parse_positions(contract, year, customer):
                         qty = 0
                         unit = convert_str(qtyUnit)
 
-                    data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, name))
+                    data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, add_product))
 
     con = None
     try:
@@ -270,6 +271,49 @@ def set_contract_not_in_work_delete(contract):
             con.close()
 
 
+def get_processing_result():
+    try:
+        conn = sq.connect(file_db)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT count(DISTINCT contract) as sum_1 FROM products_in_contracts WHERE in_work = 1")
+        result = cursor.fetchone()
+        print('Обработано накладных: ', result[0])
+
+        cursor.execute("SELECT count(DISTINCT contract) as sum_1 FROM products_in_contracts WHERE in_work = 0")
+        result = cursor.fetchone()
+        print('Не обработано накладных: ', result[0])
+
+    except sq.Error as e:
+        print("Ошибка:", e)
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    # -----------------------------------------------------
+    # con = None
+    #
+    # try:
+    #     con = sq.connect(file_db)
+    #     cur = con.cursor()
+    #     cur.execute("SELECT count(DISTINCT contract) as sum_1 FROM products_in_contracts WHERE in_work = 1")
+    #
+    #
+    #
+    #
+    #
+    #
+    # except sq.DatabaseError as err:
+    #     if con:
+    #         con.rollback()
+    #     print("Error: ", err)
+    #
+    # finally:
+    #     if con:
+    #         con.close()
+
+
 if __name__ == "__main__":
     great_table_positions()
 
@@ -323,3 +367,5 @@ if __name__ == "__main__":
             file.write('sname;name;name_dop;qty;unit;price;total;contract;year;customer;find_text' + '\n')
             for i in cur.execute(sql).fetchall():
                 writer.writerow(i)
+
+    get_processing_result()
