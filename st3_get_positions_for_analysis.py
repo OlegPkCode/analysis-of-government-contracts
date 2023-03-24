@@ -7,10 +7,11 @@ import csv
 from lib_gz import file_db, convert_str, convert_num, convert_num_dot, data_path
 
 file_output = datetime.datetime.now().strftime("%Y-%m-%d_log.csv")
+file_output_err = datetime.datetime.now().strftime("%Y-%m-%d_log_error.csv")
 
 
 def great_table_positions():
-    ''' Создаем таблицу positions, если ее нет в БД'''
+    """ Создаем таблицу positions, если ее нет в БД"""
 
     with sq.connect(file_db) as con:
         cur = con.cursor()
@@ -28,10 +29,27 @@ def great_table_positions():
                 find_text TEXT
             )
         ''')
+        con.commit()
+
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS positions_err (
+                name TEXT,
+                name_dop TEXT,
+                qty REAL,
+                unit TEXT,
+                price REAL,
+                total REAL,
+                contract TEXT,
+                year INTEGER,
+                customer TEXT,
+                find_text TEXT
+            )
+        ''')
+        con.commit()
 
 
 def get_list_contracts():
-    '''Получаем список позиций, которые осталось спарсить'''
+    """Получаем список позиций, которые осталось спарсить"""
 
     positions_need = set()
     positions_have = set()
@@ -56,7 +74,7 @@ def get_list_contracts():
 
 
 def get_find_text_in_contract(contract):
-    ''' Берем список всех продуктов, которые могут быть в данном контракте'''
+    """ Берем список всех продуктов, которые могут быть в данном контракте"""
 
     positions = []
     with sq.connect(file_db) as con:
@@ -70,7 +88,7 @@ def get_find_text_in_contract(contract):
 
 
 def get_sum_contract(contract):
-    ''' Возвращаем сумму контракта'''
+    """ Возвращаем сумму контракта"""
 
     with sq.connect(file_db) as con:
         cur = con.cursor()
@@ -94,6 +112,7 @@ def parse_positions(contract, year, customer):
             r_pos = requests.get(URL_ITEMS, headers=HEADERS, timeout=15)
             soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
             position_list = soup_pos.find_all('tr', class_='tableBlock__row')
+            time.sleep(5)
             break
         except Exception as exp:
             # если возникла какая-либо ошибка
@@ -105,17 +124,8 @@ def parse_positions(contract, year, customer):
     find_text = get_find_text_in_contract(contract)
     total_sum_contract = get_sum_contract(contract)
     sum_contract = 0
-    flag_sum_contract = True
-    # for item_find_text in find_text:
-    # positions = item_find_text.strip(',')
-    # for position in positions:
-    #     print(position)
-
-    # print(find_text)
-    # write_log('3. У данного контракта берем в работу позиции: ' + str(positions))
-
-    # for product in positions:
-    # print(item_find_text)
+    flag_sum_contract = True  # Проверить на разницу суммы контракта и сумммы позиций контракта
+    flag_contract_err = False
 
     # Заполняем список data позициями контракта
     for item in position_list:
@@ -159,7 +169,6 @@ def parse_positions(contract, year, customer):
                     qty = 0
                     unit = convert_str(qtyUnit)
 
-                # data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, product))
                 if sum != '' and float(convert_num_dot(sum)) >= 10000:
                     data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, add_product))
 
@@ -168,24 +177,59 @@ def parse_positions(contract, year, customer):
             write_log('', contract,
                       f'Не сходится сумма контракта с суммой позиций по контракту!!! Сумма контракта: {total_sum_contract}, сумма позиций: {round(sum_contract, 2)}')
 
-    # for input_pos in positions:
-    #     find_pos = False
-    #     for data_pos in data:
-    #         if input_pos in data_pos[9]:
-    #             find_pos = True
-    #     if find_pos == False:
-    #         write_log('!!! Нет данных по продукту в контракте: <' +
-    #                   input_pos + ';' + contract + '>')
+    if len(data) == 0:
+        flag_contract_err = True
+
+        # Заполняем список data позициями контракта
+        for item in position_list:
+            name = item.find(
+                'div', class_='padBtm5 inline js-expand-all-list--not-count')
+            qtyUnit = item.find(
+                'div', class_='align-items-center w-space-nowrap')
+            priceAndSum = item.find_all(
+                'td', class_='tableBlock__col tableBlock__col_right')
+            if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
+                name = convert_str(name.text)
+                name_dop = convert_str(item.find_all(
+                    'td', class_='tableBlock__col')[2].text)
+
+                # Преобразование столбцов цены и суммы
+                price = convert_num(priceAndSum[0].text.strip())
+                sum = priceAndSum[1].text.strip()
+                sum = convert_num(sum[:sum.find('\n')])
+
+                if True:
+                    # Преобразование столбцов количества и единиц измерений
+                    qtyUnit = qtyUnit.text.strip()
+                    try:
+                        qty, unit = qtyUnit.split('\n')
+                        qty = convert_num(qty)
+                        if qty.find(',') == -1:
+                            qty = qty + ',00'
+                        unit = convert_str(unit)
+                    except:
+                        qty = 0
+                        unit = convert_str(qtyUnit)
+
+                    data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, name))
 
     con = None
-
     try:
         con = sq.connect(file_db)
         cur = con.cursor()
-        cur.executemany(
-            "INSERT INTO positions (name, name_dop, qty, unit, price, total, contract, year, customer, find_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            data)
+
+        if not flag_contract_err:
+            sql = "INSERT INTO positions (name, name_dop, qty, unit, price, total, contract, year, customer, find_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        else:
+            sql = "INSERT INTO positions_err (name, name_dop, qty, unit, price, total, contract, year, customer, find_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+        cur.executemany(sql, data)
         con.commit()
+
+        if flag_contract_err:
+            sql = f"UPDATE products_in_contracts SET in_work = 0 WHERE contract = '{contract}'"
+            cur.execute(sql)
+            con.commit()
 
     except sq.DatabaseError as err:
         if con:
@@ -198,7 +242,7 @@ def parse_positions(contract, year, customer):
 
 
 def write_log(count_contracts, contract, err=''):
-    '''Записываем данные <message> в лог-файл'''
+    """Записываем данные <message> в лог-файл"""
     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
     message = f"{datetime_now};Осталось контрактов - {count_contracts};Обработка контракта - {contract};{err}" + '\n'
     print(message)
@@ -206,7 +250,7 @@ def write_log(count_contracts, contract, err=''):
         file.write(message)
 
 
-def set_contract_not_in_work(contract):
+def set_contract_not_in_work_delete(contract):
     con = None
 
     try:
@@ -233,37 +277,22 @@ if __name__ == "__main__":
     list_parsing = list(get_list_contracts())
 
     while len(list_parsing) > 0:
-        try:
-            # while True:
-            # Сортируем по наименованию продукта (2), и по контрактам (0)
-            list_parsing.sort(key=lambda x: (x[2], x[0]))
-            contract, year, customer = list_parsing[0]
-            # Парсим заданную строку
-            count_contracts = len(list_parsing)
-            write_log(count_contracts, contract)
-            parse_positions(contract, year, customer)
-            list_parsing = list(get_list_contracts())
-            new_count_contracts = len(list_parsing)
-            # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
-            if count_contracts == new_count_contracts:
-                # write_log(count_contracts, contract, 'Контракт не обработан!')
-                set_contract_not_in_work(contract)
-                list_parsing = list(get_list_contracts())
+        # Сортируем по контрактам)
+        list_parsing.sort(key=lambda x: x[0])
+        contract, year, customer = list_parsing[0]
+        # Парсим заданную строку
+        count_contracts = len(list_parsing)
+        write_log(count_contracts, contract)
+        parse_positions(contract, year, customer)
+        list_parsing = list(get_list_contracts())
+        # new_count_contracts = len(list_parsing)
+        # Если по какой-либо причине контракт не спарсился - пишем в лог и пропускаем его. Разбираемся с ними отельно.
+        # if count_contracts == new_count_contracts:
+        #     # write_log(count_contracts, contract, 'Контракт не обработан!')
+        #     set_contract_not_in_work(contract)
+        #     list_parsing = list(get_list_contracts())
 
-            time.sleep(5)
-
-        except ConnectionResetError as cn:
-            # если возник разрыв соединения
-            write_log('', '', f"Error 1: {cn}")
-            time.sleep(60)
-
-        except Exception as exp:
-            # если возникла какая-либо ошибка
-            write_log('', '', f"Error 2: {exp}")
-            time.sleep(60)
-
-    '''Выгружает спарсенные данные из таблицы positions в csv файл дальнейшей очистки и анализа'''
-
+    # Выгружает спарсенные данные из таблицы positions в csv файл дальнейшей очистки и анализа
     with sq.connect(file_db) as con:
         cur = con.cursor()
 
@@ -273,6 +302,20 @@ if __name__ == "__main__":
 
         # Получаем результаты парсинга
         sql = "SELECT DISTINCT '', name, name_dop, qty, unit, price, total, contract, year, customer, find_text FROM positions"
+
+        with open(file_output, 'w') as file:
+            writer = csv.writer(file, delimiter=';')
+            # Записываем наименования столбцов
+            file.write('sname;name;name_dop;qty;unit;price;total;contract;year;customer;find_text' + '\n')
+            for i in cur.execute(sql).fetchall():
+                writer.writerow(i)
+
+        # Получаем название файла
+        sql = 'SELECT DISTINCT find_text FROM positions'
+        file_output = data_path + cur.execute(sql).fetchall()[0][0] + '_err.csv'
+
+        # Получаем результаты парсинга
+        sql = "SELECT DISTINCT '', name, name_dop, qty, unit, price, total, contract, year, customer, find_text FROM positions_err"
 
         with open(file_output, 'w') as file:
             writer = csv.writer(file, delimiter=';')
