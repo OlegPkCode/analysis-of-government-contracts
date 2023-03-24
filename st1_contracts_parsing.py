@@ -23,13 +23,21 @@ def parsing_contract(contract, customer):
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
     }
 
-    # Считываем заголовок контракта и позиции в контракте
-    r_head = requests.get(URL_HEADER, headers=HEADERS)
-    soup_head = BeautifulSoup(r_head.text, 'html.parser')
-    r_pos = requests.get(URL_ITEMS, headers=HEADERS)
-    soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
-
-    position_list = soup_pos.find_all('tr', class_='tableBlock__row')
+    while True:
+        try:
+            # Считываем заголовок контракта и позиции в контракте
+            r_head = requests.get(URL_HEADER, headers=HEADERS)
+            soup_head = BeautifulSoup(r_head.text, 'html.parser')
+            r_pos = requests.get(URL_ITEMS, headers=HEADERS)
+            soup_pos = BeautifulSoup(r_pos.text, 'html.parser')
+            # position_list = soup_pos.find_all('tr', class_='tableBlock__row')
+            position_list = soup_pos.find('tbody', class_='tableBlock__body').find_all('tr', class_='tableBlock__row')
+            time.sleep(5)
+            break
+        except Exception as exp:
+            # если возникла какая-либо ошибка
+            print('Ошибка соединения. Пауза 1 мин.')
+            time.sleep(60)
 
     data = []
     pos = 0
@@ -39,7 +47,7 @@ def parsing_contract(contract, customer):
     # Заполняем список data позициями контракта
     for item in position_list:
         name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
-        qtyUnit = item.find('div', class_='align-items-center w-space-nowrap')
+        qtyUnit = item.find('div', class_='align-items-center')
         priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
             name = convert_str(name.text)
