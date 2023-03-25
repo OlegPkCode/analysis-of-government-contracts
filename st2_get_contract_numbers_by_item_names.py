@@ -22,13 +22,12 @@ import time
 import sqlite3 as sq
 from lib_gz import data_path, convert_str, file_db, convert_num
 
-# start_date = '01.01.2017'
-# end_date = '31.12.2022'
+s_date = '01.01.2017'
+e_date = '31.12.2022'
 file_input = data_path + 'products.csv'
+file_error = data_path + 'error.txt'
 test_difference = 0
-# list_date = [
-#     '01.01.2017,31.12.2022',
-# ]
+
 list_date = [
     '01.01.2017,31.12.2017',
     '01.01.2018,31.12.2018',
@@ -93,26 +92,28 @@ if __name__ == "__main__":
         text = file.read()
 
     for i in text.split('\n'):
-        list_products.append(i)
+        if len(i) > 0:
+            list_products.append(i)
 
     # Парсим контракты, содержащие данные продукты
     for find_text in list_products:
-
         products = find_text.split(',')
         for product in products:
+
+            list_contracts = []
+            sum_row = 0
+
             for item_list_date in list_date:
                 start_date, end_date = item_list_date.split(',')
-                print(f"Период с {start_date} по {end_date} ----- ----- ----- ----- -----")
+                # print(f"Период с {start_date} по {end_date} ----- ----- ----- ----- -----")
 
                 num_page = 1
-                sum_row = 0
-                list_contracts = []
 
                 # Получаем коллекцию BeautifulSoup согласно заданным параметрам
                 rows = get_rows(product, num_page, start_date, end_date)
 
                 while len(rows) > 0:
-                    print('Page', num_page, product)
+                    # print('Page', num_page, product)
                     for item in rows:
                         # Номер контракта
                         contract_num = item.find('a').text.strip()[2:]
@@ -139,16 +140,21 @@ if __name__ == "__main__":
 
                     # Листаем страницы
                     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
-                    print(f"Total row = {sum_row}, Обработка: {datetime_now}")
+                    # print(f"Total row = {sum_row}, Обработка: {datetime_now}")
+                    print(f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
                     num_page = num_page + 1
                     rows = get_rows(product, num_page, start_date, end_date)
 
-                # Записываем результат в файл
-                file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + start_date + '_to_' + end_date + '_rows_' + str(
+            # Записываем результат в файл
+            if len(list_contracts) > 0:
+                file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + s_date + '_to_' + e_date + '_rows_' + str(
                     sum_row) + '.csv'
                 with open(file_output, 'a', newline='') as file:
                     writer = csv.writer(file, delimiter='\n')
                     writer.writerow(list_contracts)
+            else:
+                with open(file_error, 'a', newline='') as file:
+                    file.write(f"Нет данных по продукту: {product}\n")
 
     '''
     Заходит в папку <data_path> текущего проекта, берет все файлы *.csv и конкотинирует их в файл all.csv
@@ -165,7 +171,7 @@ if __name__ == "__main__":
     with open(file_output, 'w') as f:
         for adress, dirs, files in os.walk(data_path):
             for file in files:
-                if file == 'products.csv':
+                if file == 'products.csv' or file == 'error.txt':
                     continue
                 full_path = os.path.join(adress, file)
                 if full_path[-4:] == '.csv':
