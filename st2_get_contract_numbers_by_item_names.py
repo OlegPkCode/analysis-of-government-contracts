@@ -26,6 +26,7 @@ s_date = '01.01.2017'
 e_date = '31.12.2022'
 file_input = data_path + 'products.csv'
 file_error = data_path + 'error.txt'
+file_log = data_path + 'log.txt'
 test_difference = 0
 
 list_date = [
@@ -78,11 +79,18 @@ def get_rows(name_pos, num_page, start_date, end_date):
             break
         except Exception as exp:
             # если возникла какая-либо ошибка
-            print('Ошибка соединения. Пауза 1 мин.')
+            write_log('Ошибка соединения. Пауза 1 мин.')
             time.sleep(60)
 
     return rows
 
+def write_log(message):
+    """Записываем данные <message> в лог-файл"""
+    datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
+    message = f"{datetime_now}; {message}" + '\n'
+    print(message)
+    with open(file_log, 'a') as file:
+        file.write(message)
 
 if __name__ == "__main__":
 
@@ -105,7 +113,6 @@ if __name__ == "__main__":
 
             for item_list_date in list_date:
                 start_date, end_date = item_list_date.split(',')
-                # print(f"Период с {start_date} по {end_date} ----- ----- ----- ----- -----")
 
                 num_page = 1
 
@@ -113,7 +120,6 @@ if __name__ == "__main__":
                 rows = get_rows(product, num_page, start_date, end_date)
 
                 while len(rows) > 0:
-                    # print('Page', num_page, product)
                     for item in rows:
                         # Номер контракта
                         contract_num = item.find('a').text.strip()[2:]
@@ -140,8 +146,7 @@ if __name__ == "__main__":
 
                     # Листаем страницы
                     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
-                    # print(f"Total row = {sum_row}, Обработка: {datetime_now}")
-                    print(f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
+                    write_log(f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
                     num_page = num_page + 1
                     rows = get_rows(product, num_page, start_date, end_date)
 
@@ -210,11 +215,7 @@ if __name__ == "__main__":
             set_contract_year_product_customer.add(contract + ';' + year + ';' + sum + ';' + product + ';' + customer)
 
     os.remove(file_output)
-    # print('Количество продуктов:', len(set_product))
-    print('Количество контрактов:', len(set_contract))
-    # print('Контракт/год:', len(set_contract_year))
-    # print('Контракт/год/заказчик:', len(set_contract_year_customer))
-    # print('Контракт/год/продукт/заказчик:', len(set_contract_year_product_customer))
+    write_log('Количество контрактов:', len(set_contract))
 
     # Заполняем список кортежей данными из множества
     data = []
