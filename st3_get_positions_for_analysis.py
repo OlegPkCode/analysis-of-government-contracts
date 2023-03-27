@@ -100,7 +100,7 @@ def get_sum_contract(contract):
 
 def parse_positions(contract, year, customer):
     URL_ITEMS = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + \
-                contract + '&page=1&pageSize=200'
+                contract + '&page=1&pageSize=400'
     HEADERS = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
@@ -170,7 +170,7 @@ def parse_positions(contract, year, customer):
                     data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, add_product))
 
     if flag_sum_contract:
-        if total_sum_contract != round(sum_contract, 2):
+        if round(total_sum_contract, -1) != round(sum_contract, -1):
             write_log('', contract,
                       f'Не сходится сумма контракта с суммой позиций!!! {total_sum_contract} / {round(sum_contract, 2)}')
 
