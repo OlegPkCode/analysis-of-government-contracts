@@ -4,9 +4,12 @@ certifi==2022.12.7
 charset-normalizer==3.1.0
 defusedxml==0.7.1
 idna==3.4
+lml==0.1.0
 numpy==1.24.2
 odfpy==1.4.1
 pandas==1.5.3
+pyexcel-io==0.6.6
+pyexcel-ods==0.6.0
 python-dateutil==2.8.2
 pytz==2022.7.1
 request2==0.2
