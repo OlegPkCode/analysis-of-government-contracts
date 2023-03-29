@@ -84,6 +84,7 @@ def get_rows(name_pos, num_page, start_date, end_date):
 
     return rows
 
+
 def write_log(message):
     """Записываем данные <message> в лог-файл"""
     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
@@ -91,6 +92,7 @@ def write_log(message):
     print(message)
     with open(file_log, 'a') as file:
         file.write(message)
+
 
 if __name__ == "__main__":
 
@@ -146,7 +148,8 @@ if __name__ == "__main__":
 
                     # Листаем страницы
                     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
-                    write_log(f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
+                    write_log(
+                        f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
                     num_page = num_page + 1
                     rows = get_rows(product, num_page, start_date, end_date)
 
@@ -215,7 +218,7 @@ if __name__ == "__main__":
             set_contract_year_product_customer.add(contract + ';' + year + ';' + sum + ';' + product + ';' + customer)
 
     os.remove(file_output)
-    write_log('Количество контрактов:', len(set_contract))
+    write_log('Количество контрактов: ' + str(len(set_contract)))
 
     # Заполняем список кортежей данными из множества
     data = []
