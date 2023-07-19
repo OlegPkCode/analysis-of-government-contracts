@@ -20,7 +20,7 @@ import csv
 import os
 import time
 import sqlite3 as sq
-from lib_gz import data_path, convert_str, file_db, convert_num
+from lib_gz import data_path, clean_str, file_db, clean_num
 
 s_date = '01.01.2017'
 e_date = '31.12.2022'
@@ -130,10 +130,10 @@ if __name__ == "__main__":
                         # Список позиций контракта
                         contract_list_products = item.find('span', class_='pl-0 col').find('a')
                         # Заказчик
-                        contract_customer = convert_str(
+                        contract_customer = clean_str(
                             item.find('div', class_='registry-entry__body-href').text.strip())
                         # Берем общую сумму позиций данного контакта на сайте
-                        total_in_site = convert_num(item.find('div', class_='price-block__value').text.strip())
+                        total_in_site = clean_num(item.find('div', class_='price-block__value').text.strip())
 
                         # Если данный контракт содержит электронную версию, и контракта нет в списке, то сохраняем его
                         if contract_list_products is not None:

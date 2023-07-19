@@ -4,7 +4,7 @@ import time
 import sqlite3 as sq
 import datetime
 import csv
-from lib_gz import file_db, convert_str, convert_num, convert_num_dot, data_path
+from lib_gz import file_db, clean_str, clean_num, replace_comma, data_path
 
 file_output = datetime.datetime.now().strftime("%Y-%m-%d_log.csv")
 file_output_err = datetime.datetime.now().strftime("%Y-%m-%d_log_error.csv")
@@ -95,7 +95,7 @@ def get_sum_contract(contract):
         sql = f"SELECT sum FROM products_in_contracts WHERE contract = '{contract}'"
         sum_contract = cur.execute(sql).fetchall()[0][0]
 
-    return float(convert_num_dot(sum_contract))
+    return float(replace_comma(sum_contract))
 
 
 def parse_positions(contract, year, customer):
@@ -133,16 +133,16 @@ def parse_positions(contract, year, customer):
         qtyUnit = item.find('div', class_='align-items-center')
         priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
-            name = convert_str(name.text)
-            name_dop = convert_str(item.find_all(
+            name = clean_str(name.text)
+            name_dop = clean_str(item.find_all(
                 'td', class_='tableBlock__col')[2].text)
 
             # Преобразование столбцов цены и суммы
-            price = convert_num(priceAndSum[0].text.strip())
+            price = clean_num(priceAndSum[0].text.strip())
             sum = priceAndSum[1].text.strip()
-            sum = convert_num(sum[:sum.find('\n')])
+            sum = clean_num(sum[:sum.find('\n')])
             if sum != '':
-                sum_contract += float(convert_num_dot(sum))
+                sum_contract += float(replace_comma(sum))
             else:
                 flag_sum_contract = False
 
@@ -158,15 +158,15 @@ def parse_positions(contract, year, customer):
                 qtyUnit = qtyUnit.text.strip()
                 try:
                     qty, unit = qtyUnit.split('\n')
-                    qty = convert_num(qty)
+                    qty = clean_num(qty)
                     if qty.find(',') == -1:
                         qty = qty + ',00'
-                    unit = convert_str(unit)
+                    unit = clean_str(unit)
                 except:
                     qty = 0
-                    unit = convert_str(qtyUnit)
+                    unit = clean_str(qtyUnit)
 
-                if sum != '' and float(convert_num_dot(sum)) >= 10000:
+                if sum != '' and float(replace_comma(sum)) >= 10000:
                     data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, add_product))
 
     if flag_sum_contract:
@@ -183,14 +183,14 @@ def parse_positions(contract, year, customer):
             qtyUnit = item.find('div', class_='align-items-center')
             priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
             if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
-                name = convert_str(name.text)
-                name_dop = convert_str(item.find_all(
+                name = clean_str(name.text)
+                name_dop = clean_str(item.find_all(
                     'td', class_='tableBlock__col')[2].text)
 
                 # Преобразование столбцов цены и суммы
-                price = convert_num(priceAndSum[0].text.strip())
+                price = clean_num(priceAndSum[0].text.strip())
                 sum = priceAndSum[1].text.strip()
-                sum = convert_num(sum[:sum.find('\n')])
+                sum = clean_num(sum[:sum.find('\n')])
 
                 parse = False
                 for item_find_text in find_text:
@@ -204,13 +204,13 @@ def parse_positions(contract, year, customer):
                     qtyUnit = qtyUnit.text.strip()
                     try:
                         qty, unit = qtyUnit.split('\n')
-                        qty = convert_num(qty)
+                        qty = clean_num(qty)
                         if qty.find(',') == -1:
                             qty = qty + ',00'
-                        unit = convert_str(unit)
+                        unit = clean_str(unit)
                     except:
                         qty = 0
-                        unit = convert_str(qtyUnit)
+                        unit = clean_str(qtyUnit)
 
                     data.append((name, name_dop, qty, unit, price, sum, contract, year, customer, add_product))
 

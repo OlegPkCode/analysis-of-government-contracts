@@ -1,19 +1,17 @@
 '''
-Парсит данные с сайта по контрактам, записанным в файле file_input
-Формат файла file_input:
-Номер контракта;Год;Заказчик
-Результат записывается в файл file_output
+This script parses contract data from a website, which is recorded in the file_input file.
+The format of the file_input file is:
+Contract Number; Year; Customer
+The result is recorded in the file_output file.
 '''
-
 import requests
 from bs4 import BeautifulSoup
 import time
 import csv
-from lib_gz import data_path, convert_str, convert_num, convert_num_dot
+from lib_gz import data_path, clean_str, clean_num, replace_comma
 
 file_input = data_path + 'contracts.csv'
 file_output = data_path + 'contract_items.csv'
-
 
 def parsing_contract(contract, customer):
     URL_HEADER = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + contract + '&#contractSubjects'
@@ -50,26 +48,26 @@ def parsing_contract(contract, customer):
         qtyUnit = item.find('div', class_='align-items-center')
         priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
         if (name is not None) and (qtyUnit is not None) and (priceAndSum is not None):
-            name = convert_str(name.text)
-            name_dop = convert_str(item.find_all('td', class_='tableBlock__col')[2].text)
+            name = clean_str(name.text)
+            name_dop = clean_str(item.find_all('td', class_='tableBlock__col')[2].text)
 
             # Преобразование столбцов количества и единиц измерений
             qtyUnit = qtyUnit.text.strip()
             try:
                 qty, unit = qtyUnit.split('\n')
-                qty = convert_num(qty)
-                unit = convert_str(unit)
+                qty = clean_num(qty)
+                unit = clean_str(unit)
             except:
                 qty = 0
-                unit = convert_str(qtyUnit)
+                unit = clean_str(qtyUnit)
 
             # Преобразование столбцов цены и суммы
-            price = convert_num(priceAndSum[0].text.strip())
+            price = clean_num(priceAndSum[0].text.strip())
             sum = priceAndSum[1].text.strip()
-            sum = convert_num(sum[:sum.find('\n')])
+            sum = clean_num(sum[:sum.find('\n')])
 
             pos += 1
-            total += float(convert_num_dot(sum))
+            total += float(replace_comma(sum))
 
             data.append(
                 {'name': name, 'name_dop': name_dop, 'qtyUnit': qtyUnit, 'qty': qty, 'unit': unit, 'price': price,
@@ -83,8 +81,8 @@ def parsing_contract(contract, customer):
     customer_full_name = soup_head.find('span', class_='cardMainInfo__content').text.strip()
 
     # Берем общую сумму позиций данного контакта на сайте
-    total_in_site = convert_num(soup_pos.find('td', class_='tableBlock__col tableBlock__col_right cost').text.strip())
-    total_in_site = float(convert_num_dot(total_in_site))
+    total_in_site = clean_num(soup_pos.find('td', class_='tableBlock__col tableBlock__col_right cost').text.strip())
+    total_in_site = float(replace_comma(total_in_site))
 
     # Если общая сумма симпортированых позиций равна сумме контракта на сайте - пишем результат в файл
     if round(total, 2) == total_in_site:
@@ -101,7 +99,7 @@ def parsing_contract(contract, customer):
                         i['sum'],
                         contract,
                         year_finish,
-                        convert_str(customer_full_name),
+                        clean_str(customer_full_name),
                         customer
                     )
                 )
