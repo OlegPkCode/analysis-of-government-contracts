@@ -9,7 +9,7 @@ file_db = 'gz.sqlite3'
 def clean_str(x: str) -> str:
     """Removes leading non-alphabetic characters, redundant spaces, quotes and semicolons."""
     x = ' '.join(x.split()).replace('"', '').replace("'", '').replace(';', '')
-    return x.lstrip('0123456789 ')
+    return x.lstrip('0123456789. ')
 
 
 def clean_num(x: str) -> str:
