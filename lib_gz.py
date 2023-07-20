@@ -1,9 +1,16 @@
 import os
 import re
 import pandas as pd
+from bs4 import BeautifulSoup
+import requests
+import time
 
 data_path = './data/'
 file_db = 'gz.sqlite3'
+HEADERS = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
+}
 
 
 def clean_str(x: str) -> str:
@@ -20,6 +27,19 @@ def clean_num(x: str) -> str:
 def replace_comma(x: str) -> str:
     """Replaces comma with dot in a number."""
     return x.replace(',', '.')
+
+
+def get_soup(url):
+    while True:
+        try:
+            response = requests.get(url, headers=HEADERS)
+            response.raise_for_status()  # Check for any request errors
+            soup = BeautifulSoup(response.text, 'html.parser')
+            time.sleep(7)
+            return soup
+        except Exception as e:
+            print(f'Connection error: {e}. Pausing for 1 minute.')
+            time.sleep(60)
 
 
 def convert_ods_to_csv(file_output):
