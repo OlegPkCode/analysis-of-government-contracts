@@ -114,5 +114,5 @@ target/
 
 # This project
 data/*
-#*.sqlite3
+*.sqlite3
 *.csv
