@@ -1,60 +1,28 @@
-## Analysis of government contracts  
-  
-### Краткое описание:  
-  
-Сбор данных с сайта госзакупок для выявления завышенных закупочных цен.  
-Сайт госзакупок: https://zakupki.gov.ru  
-  
-### Стек:  
-  
-Python, SQLite, Docker  
-  
-### Полное описание:  
-  
-Анализируем возможный ущерб в сфере госзакупок по выбранному контрагенту путем парсинга его контрактов, выборки конкретных позиций номенклатуры по которым будет производить анализ, затем парсинга всей этой номенклатуры у других участников госзакупок (за аналогичный период в аналогичном регионе). Для дальнейшего сравнения цен, по которым была закуплена номенклатура выбранным контрагентом и цен по которым ее закупали другие участники госзакупок. Описание работы скриптов:  
-  
-1. Парсим данные по выбранному контрагенту, по выбранным номерам контрактов (`contracts_parsing.py`).  
-  
-2. Парсим номера контрактов, где встречается искомая номенклатура (выбранная в п.1), по которой будет производиться анализ (`get_contract_numbers_by_item_names.py`).  
-  
-3. Объединяем данные по позициям (из п. 2) в один файл и записываем его в БД (`make_csv_and_db.py`).   
-  
-4. Сканируем БД и парсим искомую номенклатуру из контрактов, найденных в п. 2 (`get_positions_for_analysis.py`).   
-  
-5. Выгружаем спарсенные данные в csv файл дальнейшей очистки и анализа (`make_dataset.py`).  
-  
-Документацию можно посмотреть [здесь.](./docs/description.md)
-  
-### Инструкция по запуску:  
-  
-Создать папку для проекта. Создать в ней папку `data`.  
-Выполнить в папке проекта последовательно скрипты:  
-  
->python3 contracts_parsing.py  
-  
->python3 get_contract_numbers_by_item_names.py  
-  
->python3 make_csv_and_db.py  
-  
->python3 get_positions_for_analysis.py   
-  
->python3 make_dataset.py
+# Analysis of government contracts
 
-### Запуск проекта в Docker
+**Project Description: Collection and analysis of data from the public procurement website to identify inflated purchase prices.**
 
-Создать в папке проекта папку `data`
+**Overview:** Contracts Parser is a Python project designed for automated parsing of contract data from a government procurement website. The project consists of several scripts that perform various tasks related to parsing and analyzing contract data.
 
-Клонировать репозиторий
-```
-git clone git@github.com:prol-it/analysis-of-government-contracts.git
-```
+**Project Files:**
 
-Собрать образ из Dockerfile
-```
-docker build --tag gz .
-```
+1. `lib_gz.py`: A library module containing utility functions for data conversion, file handling, and logging. Other scripts in the project import functions from this module to perform specific tasks.
+    
+2. `st1_contracts_parsing.py`: A script focused on parsing contract data from a procurement website. It retrieves contract information, extracts relevant data from HTML pages, and stores the parsed data in a database for further analysis or reporting.
+    
+3. `st2_get_contract_numbers_by_item_names.py`: This script retrieves contract numbers based on specific item names. It reads a list of item names from a file, searches for corresponding contracts on a procurement website, and saves the contract numbers to output files.
+    
+4. `st3_get_positions_for_analysis.py`: This script parses position details from contracts for analysis purposes. It retrieves contracts, extracts position data from their web pages, and stores the parsed data in a database or output files. The collected position data can be further analyzed or used to generate reports.
 
-Запустить контейнер
-```
-docker run -it --rm -v $(pwd)/data:/app/data gz /bin/bash
-```
+**Technologies:**
+
+- Python
+- BeautifulSoup
+- SQLite
+
+**Installation and Setup:** To set up the Contracts Analysis Toolkit locally, follow these steps:
+
+1. Clone the project repository from GitHub.
+2. Install the required dependencies and libraries as specified in the project's `requirements.txt` file.
+3. Configure the project settings, such as database connections or file paths, as per your environment.
+4. Run the desired script(s) using a Python interpreter.
