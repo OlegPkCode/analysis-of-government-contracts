@@ -13,14 +13,14 @@
 которые есть в списке file_input
 '''
 
-import requests
-from bs4 import BeautifulSoup
+# import requests
+# from bs4 import BeautifulSoup
 import datetime
 import csv
 import os
 import time
 import sqlite3 as sq
-from lib_gz import data_path, clean_str, file_db, clean_num
+from lib_gz import data_path, clean_str, file_db, clean_num, get_soup
 
 s_date = '01.01.2017'
 e_date = '31.12.2022'
@@ -64,23 +64,7 @@ def get_rows(name_pos, num_page, start_date, end_date):
 
     url2 = url2.replace('\n', '')
     url = url1 + ''.join(url2.split())
-
-    HEADERS = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
-    }
-
-    while True:
-        try:
-            r = requests.get(url, headers=HEADERS)
-            soup = BeautifulSoup(r.text, 'html.parser')
-            rows = soup.find_all('div', class_='row no-gutters registry-entry__form mr-0')
-            time.sleep(5)
-            break
-        except Exception as exp:
-            # если возникла какая-либо ошибка
-            write_log('Ошибка соединения. Пауза 1 мин.')
-            time.sleep(60)
+    rows = get_soup(url).find_all('div', class_='row no-gutters registry-entry__form mr-0')
 
     return rows
 
