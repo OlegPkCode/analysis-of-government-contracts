@@ -18,8 +18,7 @@ def parsing_contract(contract, customer):
     HEADER_URL = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order.html?reestrNumber=' + contract + '&#contractSubjects'
     ITEMS_URL = 'https://zakupki.gov.ru/epz/contract/contractCard/payment-info-and-target-of-order-list.html?reestrNumber=' + contract + '&page=1&pageSize=200'
     header_soup = get_soup(HEADER_URL)
-    contract_soup = get_soup(ITEMS_URL)
-    position_list = contract_soup.find('tbody', class_='tableBlock__body').find_all('tr', class_='tableBlock__row')
+    position_list = get_soup(ITEMS_URL).find('tbody', class_='tableBlock__body').find_all('tr', class_='tableBlock__row')
 
     data = []
     pos = 0
