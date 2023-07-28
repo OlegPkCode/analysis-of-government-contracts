@@ -42,6 +42,39 @@ def get_soup(url):
             time.sleep(60)
 
 
+def contract_items_parsing(contract_positions):
+    contract_items = []
+
+    # Fill the data list with contract positions
+    for item in contract_positions:
+        name = item.find('div', class_='padBtm5 inline js-expand-all-list--not-count')
+        qtyUnit = item.find('div', class_='align-items-center')
+        priceAndSum = item.find_all('td', class_='tableBlock__col tableBlock__col_right')
+        if name and qtyUnit and priceAndSum:
+            name = clean_str(name.text)
+            name_dop = clean_str(item.find_all('td', class_='tableBlock__col')[2].text)
+
+            # Converting quantity and measurement units columns
+            qtyUnit = qtyUnit.text.strip()
+            try:
+                qty, unit = qtyUnit.split('\n')
+                qty = clean_num(qty)
+                unit = clean_str(unit)
+            except:
+                qty = 0
+                unit = clean_str(qtyUnit)
+
+            # Converting price and sum columns
+            price = clean_num(priceAndSum[0].text.strip())
+            summ = priceAndSum[1].text.strip()
+            summ = clean_num(summ[:summ.find('\n')])
+
+            contract_items.append(
+                {'name': name, 'name_dop': name_dop, 'qty': qty, 'unit': unit, 'price': price, 'summ': summ})
+
+    return contract_items
+
+
 def convert_ods_to_csv(file_output):
     """Converts all ods files in the data_path directory to csv files and
     generates a final file file_name in csv format."""
