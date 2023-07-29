@@ -40,30 +40,28 @@ list_date = [
 
 
 def get_rows(name_pos, num_page, start_date, end_date):
-    searchString = lambda: '' if len(name_pos) == 0 else 'searchString=' + name_pos + '&'
+    search_string = f'searchString={name_pos}&' if name_pos else ''
 
-    url1 = 'https://zakupki.gov.ru/epz/contract/search/results.html?' + searchString()
-    url2 = ''' 
-    morphology=on&
-    fz44=on&
-    contractStageList_1=on&
-    contractStageList_2=on&
-    contractStageList=1%2C2&
-    selectedContractDataChanges=ANY&
-    contractCurrencyID=-1&
-    budgetLevelsIdNameHidden=%7B%7D&
-    customerPlace=5277347&
-    executionDateStart=''' + start_date + '''&
-    executionDateEnd=''' + end_date + '''&
-    countryRegIdNameHidden=%7B%7D&
-    sortBy=UPDATE_DATE&
-    pageNumber=''' + str(num_page) + '''&
-    sortDirection=false&
-    recordsPerPage=_500&
-    showLotsInfoHidden=false'''
+    url = f'https://zakupki.gov.ru/epz/contract/search/results.html?{search_string}' + (
+        'morphology=on&'
+        'fz44=on&'
+        'contractStageList_1=on&'
+        'contractStageList_2=on&'
+        'contractStageList=1%2C2&'
+        'selectedContractDataChanges=ANY&'
+        'contractCurrencyID=-1&'
+        'budgetLevelsIdNameHidden=%7B%7D&'
+        'customerPlace=5277347&'
+        f'executionDateStart={start_date}&'
+        f'executionDateEnd={end_date}&'
+        'countryRegIdNameHidden=%7B%7D&'
+        'sortBy=UPDATE_DATE&'
+        f'pageNumber={str(num_page)}&'
+        'sortDirection=false&'
+        'recordsPerPage=_500&'
+        'showLotsInfoHidden=false'
+    )
 
-    url2 = url2.replace('\n', '')
-    url = url1 + ''.join(url2.split())
     rows = get_soup(url).find_all('div', class_='row no-gutters registry-entry__form mr-0')
 
     return rows
