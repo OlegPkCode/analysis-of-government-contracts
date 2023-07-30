@@ -22,21 +22,19 @@ import time
 import sqlite3 as sq
 from lib_gz import data_path, clean_str, file_db, clean_num, get_soup
 
-s_date = '01.01.2017'
-e_date = '31.12.2022'
+start_year = 2017
+end_year = 2022
 file_input = data_path + 'products.csv'
 file_error = data_path + 'error.txt'
 file_log = data_path + 'log.txt'
 test_difference = 0
 
-list_date = [
-    '01.01.2017,31.12.2017',
-    '01.01.2018,31.12.2018',
-    '01.01.2019,31.12.2019',
-    '01.01.2020,31.12.2020',
-    '01.01.2021,31.12.2021',
-    '01.01.2022,31.12.2022',
-]
+# Генерируем список дат
+list_date = []
+for year in range(start_year, end_year + 1):
+    date_start = datetime.datetime(year, 1, 1).strftime('%d.%m.%Y')
+    date_end = datetime.datetime(year, 12, 31).strftime('%d.%m.%Y')
+    list_date.append(f'{date_start},{date_end}')
 
 
 def get_rows(name_pos, num_page, start_date, end_date):
@@ -137,7 +135,7 @@ if __name__ == "__main__":
 
             # Записываем результат в файл
             if len(list_contracts) > 0:
-                file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + s_date + '_to_' + e_date + '_rows_' + str(
+                file_output = data_path + 'list_products_in_contracts_' + product + '_from_' + str(start_year) + '_to_' + str(end_year) + '_rows_' + str(
                     sum_row) + '.csv'
                 with open(file_output, 'a', newline='') as file:
                     writer = csv.writer(file, delimiter='\n')
