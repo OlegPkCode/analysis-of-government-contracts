@@ -92,6 +92,7 @@ if __name__ == "__main__":
 
             list_contracts = []
             sum_row = 0
+            last_sum_row = 0
 
             for item_list_date in list_date:
                 start_date, end_date = item_list_date.split(',')
@@ -127,11 +128,14 @@ if __name__ == "__main__":
                                 sum_row += 1
 
                     # Листаем страницы
+                    if last_sum_row == sum_row:
+                        break
                     datetime_now = datetime.datetime.now().strftime("%d-%m-%Y %H:%M")
                     write_log(
                         f"Product: {product}, Page: {num_page}, Total row = {sum_row}, Period: {start_date} - {end_date}, Time proc.: {datetime_now}")
                     num_page = num_page + 1
                     rows = get_rows(product, num_page, start_date, end_date)
+                    last_sum_row = sum_row
 
             # Записываем результат в файл
             if len(list_contracts) > 0:
