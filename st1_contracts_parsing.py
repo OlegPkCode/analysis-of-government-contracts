@@ -1,8 +1,8 @@
 '''
-This script parses contract data from a website, which is recorded in the file_input file.
-The format of the file_input file is:
-Contract Number; Year; Customer
-The result is recorded in the file_output file.
+The script parses the contract positions.
+Input file format (file_input): Contract number; Year; Client
+The result is written to the file_output.
+
 '''
 
 import csv
@@ -14,7 +14,7 @@ file_input = f'{data_path}contracts.csv'
 file_output = f'{data_path}contract_items.csv'
 
 
-def contract_parsing(contract, customer):
+def parse_contract_positions(contract, customer):
     HEADER_URL = f'https://zakupki.gov.ru/epz/contract/contractCard/' \
                  f'payment-info-and-target-of-order.html?reestrNumber={contract}&#contractSubjects'
     ITEMS_URL = f'https://zakupki.gov.ru/epz/contract/contractCard/' \
@@ -69,9 +69,9 @@ def load_contracts(file_input: str):
 
 if __name__ == "__main__":
 
-    contracts = load_contracts(file_input)
+    contract_numbers = load_contracts(file_input)
 
     # Parse contracts from the list
-    for item in contracts:
+    for item in contract_numbers:
         contract, year, customer = item.split(';')
-        contract_parsing(contract, customer)
+        parse_contract_positions(contract, customer)
